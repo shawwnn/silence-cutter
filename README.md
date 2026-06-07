@@ -1,6 +1,3 @@
-
----
-```md
 # 🎬 Silence Cutter Desktop App
 
 A lightweight desktop application that automatically removes long pauses and silence from videos while preserving original video quality.
@@ -26,13 +23,13 @@ It processes videos locally using FFmpeg and removes silent segments based on co
 - MP4 input/output support
 - Adjustable silence threshold
 
-### ❌ Not Included (MVP)
+### ❌ Not Included
 
-- No AI transcription (Whisper, NLP)
-- No “um/ah” filler word detection
-- No cloud upload or processing
-- No timeline-based manual editor
-- No streaming/export presets system
+- AI transcription (Whisper, NLP)
+- “um / ah” filler word removal
+- Cloud processing or uploads
+- Timeline-based editor
+- Streaming/export presets
 
 ---
 
@@ -43,20 +40,12 @@ Remove long silences while keeping video quality visually unchanged.
 ---
 
 ## ⚙️ System Architecture
-
-```
-
 User selects video
-↓
-FFmpeg detects silence intervals
-↓
-Build keep/cut timestamps
-↓
-FFmpeg trims and merges segments
-↓
-Export final high-quality MP4
+→ FFmpeg detects silence intervals
+→ Build keep/cut timestamps
+→ FFmpeg trims and merges segments
+→ Export final MP4
 
-```
 
 ---
 
@@ -64,103 +53,88 @@ Export final high-quality MP4
 
 - Python
 - FFmpeg
-- CustomTkinter (GUI)
-- PyInstaller (packaging)
+- CustomTkinter
+- PyInstaller
 
 ---
 
 ## 🎥 Processing Strategy
 
 ### Silence Detection
-Uses FFmpeg silence detection filters to identify:
 
-- silence duration threshold (e.g. 1.5s+)
-- silence start/end timestamps
+Uses FFmpeg silence detection filters:
 
-### Video Encoding Settings
+- Silence threshold (e.g. 1.5s+)
+- Start/end timestamps extraction
+
+### Encoding Settings
 
 - CRF: 18–20 (high quality)
-- Preset: medium (or fast for speed)
+- Preset: medium (balanced speed)
 - Audio: AAC (high bitrate or copy)
-- No resolution scaling
+- No resizing
 
 ---
 
 ## 🧱 Project Structure
-
-```
-
 app/
-│
-├── main.py            # Entry point
-├── gui.py             # CustomTkinter interface
-├── processor.py       # Video processing pipeline
-├── silence.py         # Silence detection logic
-├── ffmpeg_utils.py    # FFmpeg command builder
-└── config.py          # App configuration
+├── main.py # Entry point
+├── gui.py # CustomTkinter UI
+├── processor.py # Video pipeline
+├── silence.py # Silence detection
+├── ffmpeg_utils.py # FFmpeg commands
+└── config.py # Settings
 
-```
 
 ---
 
 ## ⚙️ Processing Flow
 
-1. User selects a video file
-2. System runs FFmpeg silence detection
-3. Extracts silence timestamps
-4. Converts into keep/cut intervals
-5. Rebuilds video using FFmpeg concat
-6. Exports final MP4 file
+1. User selects video file
+2. FFmpeg detects silence segments
+3. Extract timestamps
+4. Convert into keep/cut intervals
+5. Rebuild video using FFmpeg concat
+6. Export final MP4
 
 ---
 
-## 🎛️ UI Design (MVP)
+## 🎛️ UI (MVP Preview)
+Silence Cutter
+[ Select Video ]
+Silence Threshold: 1.5s
+[------●------]
+[ Start Processing ]
+Progress: ███████░░░
 
-```
-
----
-
-## |      Silence Cutter          |
-
-| [ Select Video ]             |
-|                              |
-| Silence Threshold: 1.5s      |
-| [-----|-----] Slider         |
-|                              |
-| [ Start Processing ]         |
-|                              |
-| Progress: ███████░░░         |
---------------------------------
-
-```
 
 ---
 
 ## 🧪 Build Plan
 
-### Step 1
-Install FFmpeg and test silence detection in terminal
+### 1. FFmpeg Setup
+Test silence detection in terminal
 
-### Step 2
-Build Python script for extracting silence timestamps
+### 2. Core Script
+Extract silence timestamps in Python
 
-### Step 3
-Implement FFmpeg trimming + merging pipeline
+### 3. Video Processing
+Implement cut + merge pipeline
 
-### Step 4
-Create GUI using CustomTkinter
+### 4. GUI
+Build CustomTkinter interface
 
-### Step 5
-Package using PyInstaller (.app / .exe)
+### 5. Packaging
+PyInstaller (.app / .exe)
 
 ---
 
 ## ⚡ Key Design Principle
 
-This tool does NOT perform frame-by-frame AI editing.
+No AI editing.
 
-It relies on:
-> FFmpeg-based silence detection + smart video reconstruction
+Only:
+> FFmpeg-based silence detection + deterministic video reconstruction
 
 ---
 
@@ -170,47 +144,26 @@ Input:
 - Raw video with pauses
 
 Output:
-- Same video with:
+- Clean video with:
   - long silences removed
   - minimal quality loss
-  - slightly reduced or similar file size
+  - similar file size
 
 ---
 
-## ⚠️ Important Notes
+## ⚠️ Notes
 
-- Fully offline processing
-- No video upload required
-- Optimized for speed and simplicity
-- Designed as a portfolio-grade FFmpeg project
+- Fully offline tool
+- No uploads required
+- Optimized for simplicity and speed
+- Portfolio-grade FFmpeg project
 
 ---
 
-## 📈 Future Improvements (Post-MVP)
+## 📈 Future Improvements
 
 - Whisper-based transcript editing
-- “um / ah” filler word removal
-- Smart scene detection
-- Auto caption generation
+- Filler word removal (“um / ah”)
+- Scene detection
+- Auto captions
 - Timeline preview editor
-
----
-
-## 🧩 Recommended Build Order
-
-1. FFmpeg silence detection test
-2. Python timestamp extraction
-3. Video cutting pipeline
-4. GUI integration
-5. Packaging
-```
-
----
-
-If you want, I can next generate:
-
-* `processor.py` (fully working FFmpeg pipeline)
-* or a **ready-to-run starter project zip structure**
-* or the exact **FFmpeg command that powers silence cutting**
-
-Just tell me 👍
