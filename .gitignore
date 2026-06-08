@@ -1,0 +1,58 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.env
+.venv/
+venv/
+ENV/
+
+# =========================
+# Build / Packaging
+# =========================
+build/
+dist/
+*.spec
+*.exe
+*.app
+
+# PyInstaller
+*.manifest
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
+*.tmp
+
+# =========================
+# FFmpeg / Media outputs
+# (optional but recommended)
+# =========================
+output/
+outputs/
+*.mp4
+*.mov
+*.mkv
