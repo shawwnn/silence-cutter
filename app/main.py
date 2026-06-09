@@ -1,21 +1,21 @@
-import os
-import subprocess
+from silence_detector import detect_silence
+from silence_parser import parse_silence
+from cut_builder import build_keep_intervals
 
-# Python script that uses FFmpeg to detect silence
-# in a video without creating an output file.
+VIDEO = "tests/sample.mov"
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+logs = detect_silence(VIDEO)
 
-video_path = os.path.join(BASE_DIR, "tests", "sample.mov")
+silences = parse_silence(logs)
 
-cmd = [
-    "ffmpeg",
-    "-i", video_path,
-    "-af", "silencedetect=noise=-30dB:d=0.5",
-    "-f", "null",
-    "-"
-]
+for silence in silences:
+    print(silence)
 
-result = subprocess.run(cmd, capture_output=True, text=True)
+# TEMP: you still need video duration manually for now
+video_duration = 20.0
 
-print(result.stderr)
+keep_intervals = build_keep_intervals(silences, video_duration)
+
+print("\nKEEP INTERVALS:")
+for k in keep_intervals:
+    print(k)
