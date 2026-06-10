@@ -1,18 +1,22 @@
 def build_keep_intervals(silences, video_duration):
-    keep_intervals = []
-    current_time = 0
+    keep = []
+    current = 0
 
     for silence in silences:
-        keep_intervals.append({
-            current_time,
-            silence["start"]
-        })
+        start = silence["start"]
+        end = silence["end"]
 
-        current_time = silence["end"]
+        # safety: ignore bad data
+        if start < current:
+            continue
 
-    keep_intervals.append({
-        current_time,
-        video_duration
-    })
+        if start > current:
+            keep.append((current, start))
 
-    return keep_intervals
+        current = end
+
+    # last segment
+    if current < video_duration:
+        keep.append((current, video_duration))
+
+    return keep

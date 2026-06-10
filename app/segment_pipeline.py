@@ -1,0 +1,16 @@
+import os
+from segment_cutter import cut_segment
+
+
+def generate_segments(video, keep_intervals, output_dir="temp_segments"):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    segments = []
+
+    for idx, (start, end) in enumerate(keep_intervals):
+        output_video = os.path.join(output_dir, f"segment_{idx + 1}.mp4")
+        cut_segment(video, start, end, output_video)
+        segments.append(output_video)
+
+    return segments
