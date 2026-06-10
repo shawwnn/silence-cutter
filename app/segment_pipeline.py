@@ -1,6 +1,8 @@
 import os
 from segment_cutter import cut_segment
 
+# segment_pipeline.py
+
 
 def generate_segments(video, keep_intervals, output_dir="temp_segments"):
     if not os.path.exists(output_dir):

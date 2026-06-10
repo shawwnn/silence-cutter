@@ -11,28 +11,58 @@ from video_merger import concat_segments
 
 VIDEO = "tests/sample.mov"
 
-# 1. detect silence (FFmpeg logs)
+
+# 1. detect silences
+print("\n========================")
+print("PHASE 1 - DETECT SILENCE")
+print("========================")
+
 logs = detect_silence(VIDEO)
 
+print(f"FFmpeg log length: {len(logs)} characters")
+print(logs[:2000])  # first 2000 chars only
+
 # 2. parse silences
+print("\n========================")
+print("PHASE 2 - PARSE SILENCES")
+print("========================")
+
 silences = parse_silence(logs)
 
-print("\nSILENCES:")
-for s in silences:
-    print(s)
+print(f"Silences found: {len(silences)}")
+
+for idx, silence in enumerate(silences, start=1):
+    print(f"{idx}: {silence}")
 
 # 3. get duration
+print("\n========================")
+print("PHASE 3 - VIDEO INFO")
+print("========================")
+
 video_duration = get_video_duration(VIDEO)
 
+print(f"Video duration: {video_duration:.2f}s")
+
 # 4. build keep intervals
-keep_intervals = build_keep_intervals(silences, video_duration)
+print("\n========================")
+print("PHASE 4 - BUILD KEEP INTERVALS")
+print("========================")
 
-print("\nDEBUG KEEP TYPE:", type(keep_intervals))
-print("DEBUG KEEP RAW:", keep_intervals)
+keep_intervals = build_keep_intervals(
+    silences,
+    video_duration
+)
 
-print("\nKEEP INTERVALS:")
-for k in keep_intervals:
-    print(k)
+print(f"Keep intervals found: {len(keep_intervals)}")
+
+for idx, interval in enumerate(keep_intervals, start=1):
+    start, end = interval
+
+    print(
+        f"{idx}: "
+        f"{start:.2f}s -> {end:.2f}s "
+        f"(duration {end-start:.2f}s)"
+    )
 
 # 5. CUT VIDEO into segments
 segments = generate_segments(VIDEO, keep_intervals)

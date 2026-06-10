@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+# silence_detector.py
+
 
 def detect_silence(video_path):
     cmd = [

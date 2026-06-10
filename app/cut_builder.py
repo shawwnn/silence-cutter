@@ -1,3 +1,5 @@
+# cut_builder.py
+
 def build_keep_intervals(silences, video_duration):
     keep = []
     current = 0

@@ -1,5 +1,7 @@
 import re
 
+# silence_parser.py
+
 
 def parse_silence(log_text):
     silences = []
