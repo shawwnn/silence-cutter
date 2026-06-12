@@ -12,10 +12,8 @@ def cut_segment(input_video, start_time, end_time, output_video):
         "-to", str(end_time),
         "-i", input_video,
 
-        "-c:v", "libx264",
+        "-c", "copy",
         "-c:a", "aac",
-        "-preset", "fast",
-        "-crf", "20",
 
         output_video
     ]

@@ -1,11 +1,12 @@
-from silence_detector import detect_silence
-from silence_parser import parse_silence
-from cut_builder import build_keep_intervals
-from video_info import get_video_duration
+from app.pipeline.pipeline_finalizer import finalize_pipeline
+from app.silence_detector import detect_silence
+from app.silence_parser import parse_silence
+from app.cut_builder import build_keep_intervals
+from app.video_info import get_video_duration
 
-from segment_pipeline import generate_segments
-from concat_builder import create_concat_file
-from video_merger import concat_segments
+from app.segment_pipeline import generate_segments
+from app.concat_builder import create_concat_file
+from app.video_merger import concat_segments
 
 # main.py
 
@@ -79,3 +80,6 @@ output = "assets/outputs/final.mp4"
 concat_segments(list_file, output)
 
 print("\nDONE →", output)
+
+# 8. finalize pipeline
+finalize_pipeline(output)
