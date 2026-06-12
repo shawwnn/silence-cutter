@@ -3,83 +3,64 @@ from app.silence_detector import detect_silence
 from app.silence_parser import parse_silence
 from app.cut_builder import build_keep_intervals
 from app.video_info import get_video_duration
-
 from app.segment_pipeline import generate_segments
 from app.concat_builder import create_concat_file
 from app.video_merger import concat_segments
 
-# main.py
 
-VIDEO = "tests/sample.mov"
+def run_pipeline(video_path, output_path="assets/outputs/final.mp4"):
+    print("\n========================")
+    print("PHASE 1 - DETECT SILENCE")
+    print("========================")
+
+    logs = detect_silence(video_path)
+
+    print("\n========================")
+    print("PHASE 2 - PARSE SILENCES")
+    print("========================")
+
+    silences = parse_silence(logs)
+
+    print("\n========================")
+    print("PHASE 3 - VIDEO INFO")
+    print("========================")
+
+    video_duration = get_video_duration(video_path)
+
+    print("\n========================")
+    print("PHASE 4 - BUILD KEEP INTERVALS")
+    print("========================")
+
+    keep_intervals = build_keep_intervals(silences, video_duration)
+
+    print("\n========================")
+    print("PHASE 5 - GENERATE SEGMENTS")
+    print("========================")
+
+    segments = generate_segments(video_path, keep_intervals)
+
+    print("\n========================")
+    print("PHASE 6 - CREATE CONCAT FILE")
+    print("========================")
+
+    list_file = create_concat_file(segments)
+
+    print("\n========================")
+    print("PHASE 7 - MERGE VIDEO")
+    print("========================")
+
+    concat_segments(list_file, output_path)
+
+    print("\n========================")
+    print("PHASE 8 - FINALIZE")
+    print("========================")
+
+    finalize_pipeline(output_path)
+
+    print("\nDONE →", output_path)
+
+    return output_path
 
 
-# 1. detect silences
-print("\n========================")
-print("PHASE 1 - DETECT SILENCE")
-print("========================")
-
-logs = detect_silence(VIDEO)
-
-print(f"FFmpeg log length: {len(logs)} characters")
-print(logs[:2000])  # first 2000 chars only
-
-# 2. parse silences
-print("\n========================")
-print("PHASE 2 - PARSE SILENCES")
-print("========================")
-
-silences = parse_silence(logs)
-
-print(f"Silences found: {len(silences)}")
-
-for idx, silence in enumerate(silences, start=1):
-    print(f"{idx}: {silence}")
-
-# 3. get duration
-print("\n========================")
-print("PHASE 3 - VIDEO INFO")
-print("========================")
-
-video_duration = get_video_duration(VIDEO)
-
-print(f"Video duration: {video_duration:.2f}s")
-
-# 4. build keep intervals
-print("\n========================")
-print("PHASE 4 - BUILD KEEP INTERVALS")
-print("========================")
-
-keep_intervals = build_keep_intervals(
-    silences,
-    video_duration
-)
-
-print(f"Keep intervals found: {len(keep_intervals)}")
-
-for idx, interval in enumerate(keep_intervals, start=1):
-    start, end = interval
-
-    print(
-        f"{idx}: "
-        f"{start:.2f}s -> {end:.2f}s "
-        f"(duration {end-start:.2f}s)"
-    )
-
-# 5. CUT VIDEO into segments
-segments = generate_segments(VIDEO, keep_intervals)
-
-print("\nSEGMENTS CREATED:")
-for s in segments:
-    print(s)
-
-# 6. create concat file
-list_file = create_concat_file(segments)
-
-# 7. merge final output
-output = "assets/outputs/final.mp4"
-concat_segments(list_file, output)
-
-print("\nDONE →", output)
-
-# 8. finalize pipeline
-finalize_pipeline(output)
+if __name__ == "__main__":
+    run_pipeline("tests/sample.mov")
