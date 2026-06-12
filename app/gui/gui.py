@@ -12,7 +12,9 @@ from app.main import run_pipeline
 app = ctk.CTk()
 app.title("Silence Cutter")
 # make it fullscreen window?
-app.geometry("600x400")
+app.attributes("-fullscreen", True)
+# Exit fullscreen with ESC
+app.bind("<Escape>", lambda e: app.attributes("-fullscreen", False))
 
 # ---------
 # STATE
