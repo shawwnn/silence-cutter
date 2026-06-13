@@ -23,6 +23,47 @@ app.bind("<Escape>", lambda e: app.attributes("-fullscreen", False))
 selected_file = None
 file_label_name = ctk.StringVar(value="No file selected")
 
+
+# ---------
+# UI COMPONENTS
+# ---------
+
+# title label
+title_label = ctk.CTkLabel(app, text="Silence Cutter",
+                           font=ctk.CTkFont(size=20, weight="bold"))
+title_label.pack(pady=20)
+
+# file label
+file_label = ctk.CTkLabel(app, textvariable=file_label_name)
+file_label.pack(pady=10)
+
+# select file button
+select_file_button = ctk.CTkButton(
+    app, text="Select Video File")
+select_file_button.pack(pady=10)
+
+# start button disabled
+start_button = ctk.CTkButton(
+    app, text="Start Cutting", state="disabled")
+start_button.pack(pady=10)
+
+progress = ctk.CTkProgressBar(app, width=400)
+progress.pack(pady=20)
+progress.set(0)  # start at 0%
+
+# --------------
+# Thread-safe GUI update function for progress bar
+# --------------
+
+
+def update_progress_gui(value):
+    app.after(0, lambda: progress.set(value))
+
+
+def set_buttons_state(state):
+    app.after(0, lambda: select_file_button.configure(state=state))
+    app.after(0, lambda: start_button.configure(state=state))
+
 # ---------
 # UI FUNCTIONS
 # ---------
@@ -54,52 +95,28 @@ def start_cutting():
     print(f"Starting cutting process for: {selected_file}")
 
     # disable buttons during processing
-    select_file_button.configure(state="disabled")
-    start_button.configure(state="disabled")
+    set_buttons_state("disabled")
 
     # start pipeline thread
     progress.set(0.1)  # 10%
 
     def worker():
         try:
-            output_path = run_pipeline(selected_file)
+            output_path = run_pipeline(
+                selected_file, progress_callback=update_progress_gui)
             print(f"Pipeline completed. Output: {output_path}")
         except Exception as e:
             print(f"Error during pipeline execution thread: {e}")
         finally:
             # re-enable buttons after processing
-            select_file_button.configure(state="normal")
-            start_button.configure(state="normal")
+            app.after(0, lambda: set_buttons_state("normal"))
 
     threading.Thread(target=worker, daemon=True).start()
 
 
-# ---------
-# UI COMPONENTS
-# ---------
-
-# title label
-title_label = ctk.CTkLabel(app, text="Silence Cutter",
-                           font=ctk.CTkFont(size=20, weight="bold"))
-title_label.pack(pady=20)
-
-# file label
-file_label = ctk.CTkLabel(app, textvariable=file_label_name)
-file_label.pack(pady=10)
-
-# select file button
-select_file_button = ctk.CTkButton(
-    app, text="Select Video File", command=select_video)
-select_file_button.pack(pady=10)
-
-# start button disabled
-start_button = ctk.CTkButton(
-    app, text="Start Cutting", state="disabled", command=start_cutting)
-start_button.pack(pady=10)
-
-progress = ctk.CTkProgressBar(app, width=400)
-progress.pack(pady=20)
-progress.set(0)  # start at 0%
+# Connect button commands after defining the functions
+select_file_button.configure(command=select_video)
+start_button.configure(command=start_cutting)
 
 # -----------
 # RUN APP
