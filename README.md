@@ -52,6 +52,7 @@ User selects video
 ## 🔧 Technology Stack
 
 - Python
+- homebrew
 - FFmpeg
 - CustomTkinter
 - PyInstaller
@@ -78,12 +79,17 @@ Uses FFmpeg silence detection filters:
 
 ## 🧱 Project Structure
 app/
-├── main.py # Entry point
-├── gui.py # CustomTkinter UI
-├── processor.py # Video pipeline
-├── silence.py # Silence detection
-├── ffmpeg_utils.py # FFmpeg commands
-└── config.py # Settings
+├── pipeline/
+│   └──  mutiple python files
+├── main.py                   # Backend pipeline entry point
+│   ├── mutiple python files
+├── gui/
+│   └── gui.py                # GUI entry (CustomTkinter)
+├── tests/
+│   └── sample.mov            # Input video location
+├── assets/outputs
+│       └── sample.mov        # Output video location
+└── concat_list.txt           # Logs how videos cut into segmeents
 
 
 ---
@@ -149,6 +155,26 @@ Output:
   - minimal quality loss
   - similar file size
 
+
+---
+
+## 🖥️ How to Use the App
+
+1. Run the GUI (Recommended)
+This is the main user entry point:
+python -m app.gui.gui
+
+This launches the desktop interface.
+
+From the GUI:
+Select video
+Set silence threshold           # ongoing feature
+Click Start Processing
+Backend pipeline runs automatically
+
+2. Run backend directly (CLI / testing mode)
+Use this if you want to bypass GUI and test pipeline logic:
+python main.py --input tests/sample.mp4 --output assets/output/final.mp4
 ---
 
 ## ⚠️ Notes

@@ -7,10 +7,13 @@ from app.segment_pipeline import generate_segments
 from app.concat_builder import create_concat_file
 from app.video_merger import concat_segments
 
+# main.py
+
 
 def run_pipeline(video_path, output_path="assets/outputs/final.mp4",
                  progress_callback=None,
-                 status_callback=None):
+                 status_callback=None,
+                 silence_duration=1.0):
     def update_progress_and_status_backend(status=None, progress=None):
         if progress_callback and progress is not None:
             progress_callback(progress)
@@ -21,7 +24,12 @@ def run_pipeline(video_path, output_path="assets/outputs/final.mp4",
     print("PHASE 1 - DETECT SILENCE")
     print("========================")
 
-    logs = detect_silence(video_path)
+    print(f"Using silence threshold: {silence_duration}s")
+    logs = detect_silence(
+        video_path,
+        silence_duration
+    )
+
     update_progress_and_status_backend(
         status="Detecting silence...", progress=0.33)  # 33%
 

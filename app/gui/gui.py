@@ -27,6 +27,7 @@ selected_file = None
 file_label_name = ctk.StringVar(value="No file selected")
 output_file_path = None
 
+silence_duration_var = ctk.DoubleVar(value=1.0)
 
 # ---------
 # UI COMPONENTS
@@ -46,11 +47,8 @@ select_file_button = ctk.CTkButton(
     app, text="Select Video File")
 select_file_button.pack(pady=10)
 
-# start button disabled
-start_button = ctk.CTkButton(
-    app, text="Start Cutting", state="disabled")
-start_button.pack(pady=10)
 
+# progress UI
 progress = ctk.CTkProgressBar(app, width=400)
 progress.pack(pady=20)
 progress.set(0)  # start at 0%
@@ -68,6 +66,33 @@ open_output_button = ctk.CTkButton(
 
 open_output_button.pack(pady=10)
 open_output_button.pack_forget()  # hide until we have output
+
+
+# Silence Threshold Functionality
+
+# Update threshold label when slider changes
+
+
+def update_silence_duration_label(value):
+    silence_duration_label.configure(
+        text=f"Silence Duration: {float(value):.1f}s")
+
+
+silence_duration_label = ctk.CTkLabel(app, text="Silence Duration: 1.0s")
+silence_duration_label.pack(pady=5)
+
+threshold_slider = ctk.CTkSlider(
+    app, from_=0.3, to=3.0, variable=silence_duration_var, command=update_silence_duration_label)
+default_slider_duration = 1.0
+threshold_slider.set(default_slider_duration)
+threshold_slider.pack(pady=5)
+# force sync silence duration at start
+update_silence_duration_label(default_slider_duration)
+
+# start button UI
+start_button = ctk.CTkButton(
+    app, text="Start Cutting", state="disabled")
+start_button.pack(pady=10)
 
 # --------------
 # Thread-safe GUI update function for progress bar
@@ -136,6 +161,9 @@ def start_cutting():
     # start pipeline thread
     progress.set(0.1)  # 10%
 
+    # get the value of slider before thread starts
+    silence_duration = float(silence_duration_var.get())
+
     def worker():
         global output_file_path
 
@@ -143,7 +171,8 @@ def start_cutting():
             output_file_path = run_pipeline(
                 selected_file,
                 progress_callback=update_progress_gui,
-                status_callback=update_status_gui
+                status_callback=update_status_gui,
+                silence_duration=silence_duration
             )
             print(f"Pipeline completed. Output: {output_file_path}")
 
@@ -161,6 +190,7 @@ def start_cutting():
 # Connect button commands after defining the functions
 select_file_button.configure(command=select_video)
 start_button.configure(command=start_cutting)
+
 
 # -----------
 # RUN APP
