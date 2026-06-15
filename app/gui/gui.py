@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 import customtkinter as ctk
 import threading
 from tkinter import filedialog
@@ -22,6 +25,7 @@ app.bind("<Escape>", lambda e: app.attributes("-fullscreen", False))
 
 selected_file = None
 file_label_name = ctk.StringVar(value="No file selected")
+output_file_path = None
 
 
 # ---------
@@ -51,6 +55,20 @@ progress = ctk.CTkProgressBar(app, width=400)
 progress.pack(pady=20)
 progress.set(0)  # start at 0%
 
+status_label = ctk.CTkLabel(app, text="Waiting for input...")
+status_label.pack(pady=10)
+
+output_label = ctk.CTkLabel(app, text="")
+output_label.pack(pady=10)
+
+open_output_button = ctk.CTkButton(
+    app, text="Open Output Folder", state="disabled",
+    command=lambda: subprocess.run(["open", os.path.dirname(output_file_path)])
+)
+
+open_output_button.pack(pady=10)
+open_output_button.pack_forget()  # hide until we have output
+
 # --------------
 # Thread-safe GUI update function for progress bar
 # --------------
@@ -58,6 +76,13 @@ progress.set(0)  # start at 0%
 
 def update_progress_gui(value):
     app.after(0, lambda: progress.set(value))
+
+
+def update_status_gui(text):
+    app.after(
+        0,
+        lambda: status_label.configure(text=text)
+    )
 
 
 def set_buttons_state(state):
@@ -88,6 +113,17 @@ def select_video():
         start_button.configure(state="normal")
 
 
+def show_done_state():
+    status_label.configure(text="Done!")
+
+    output_label.configure(
+        text=f"Output: {output_file_path}"
+    )
+
+    open_output_button.configure(state="normal")
+    open_output_button.pack()
+
+
 def start_cutting():
     if not selected_file:
         return
@@ -101,10 +137,18 @@ def start_cutting():
     progress.set(0.1)  # 10%
 
     def worker():
+        global output_file_path
+
         try:
-            output_path = run_pipeline(
-                selected_file, progress_callback=update_progress_gui)
-            print(f"Pipeline completed. Output: {output_path}")
+            output_file_path = run_pipeline(
+                selected_file,
+                progress_callback=update_progress_gui,
+                status_callback=update_status_gui
+            )
+            print(f"Pipeline completed. Output: {output_file_path}")
+
+            app.after(0, show_done_state)
+
         except Exception as e:
             print(f"Error during pipeline execution thread: {e}")
         finally:
