@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from app.pipeline.pipeline_finalizer import finalize_pipeline
 from app.silence_detector import detect_silence
 from app.silence_parser import parse_silence
@@ -7,10 +9,11 @@ from app.segment_pipeline import generate_segments
 from app.concat_builder import create_concat_file
 from app.video_merger import concat_segments
 
+
 # main.py
 
 
-def run_pipeline(video_path, output_path="assets/outputs/final.mp4",
+def run_pipeline(video_path, output_path=None,
                  progress_callback=None,
                  status_callback=None,
                  silence_duration=1.0):
@@ -19,6 +22,19 @@ def run_pipeline(video_path, output_path="assets/outputs/final.mp4",
             progress_callback(progress)
         if status_callback and status:
             status_callback(status)
+
+    # Phase 0 Prepare name
+        # create dynamic output if none provided
+    if output_path is None:
+
+        input_file = Path(video_path)
+
+        output_path = (
+            Path("assets/outputs")
+            / f"{input_file.stem}_cut{input_file.suffix}"
+        )
+
+        output_path = str(output_path)
 
     print("\n========================")
     print("PHASE 1 - DETECT SILENCE")
