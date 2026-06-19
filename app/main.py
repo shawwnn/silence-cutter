@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 from app.pipeline.pipeline_finalizer import finalize_pipeline
 from app.silence_detector import detect_silence
@@ -29,10 +30,18 @@ def run_pipeline(video_path, output_path=None,
 
         input_file = Path(video_path)
 
-        output_path = (
-            Path("assets/outputs")
-            / f"{input_file.stem}_cut{input_file.suffix}"
-        )
+        # if PyInstaller runs
+        if getattr(sys, "frozen", False):
+            # make directory for app version
+            output_dir = Path.home() / "SilenceCutter" / "outputs"
+        else:
+            # use dev directory
+            output_dir = Path("assets/outputs")
+
+        # make sure folder exists
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_path = output_dir / f"{input_file.stem}_cut{input_file.suffix}"
 
         output_path = str(output_path)
 
