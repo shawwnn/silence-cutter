@@ -2,8 +2,13 @@ import os
 import subprocess
 
 import customtkinter as ctk
+from app.utils import resource_path
+
 import threading
+import traceback
+
 from tkinter import filedialog
+from tkinter import messagebox
 from app.main import run_pipeline
 
 # app/gui/gui.py
@@ -14,6 +19,15 @@ from app.main import run_pipeline
 
 app = ctk.CTk()
 app.title("Silence Cutter")
+
+# temporary debug
+print(resource_path("assets/icon.ico"))
+print(os.path.exists(resource_path("assets/icon.ico")))
+
+# load icon safely
+if os.path.exists(resource_path("assets/icon.ico")):
+    app.iconbitmap(resource_path("assets/icon.ico"))
+
 # make it fullscreen window?
 app.attributes("-fullscreen", True)
 # Exit fullscreen with ESC
@@ -174,16 +188,31 @@ def start_cutting():
                 status_callback=update_status_gui,
                 silence_duration=silence_duration
             )
+
             print(f"Pipeline completed. Output: {output_file_path}")
 
             app.after(0, show_done_state)
 
         except Exception as e:
-            print(f"Error during pipeline execution thread: {e}")
-        finally:
-            # re-enable buttons after processing
-            app.after(0, lambda: set_buttons_state("normal"))
+            err = traceback.format_exc()
 
+            print(f"Error during pipeline execution thread:\n{err}")
+
+            def show_error():
+                messagebox.showerror(
+                    "Error",
+                    f"Error encountered: {str(e)}\n\nDetails:\n{err}"
+                )
+
+                status_label.configure(
+                    text="Error occurred. See details"
+                )
+
+            app.after(0, show_error)
+
+        finally:
+            # always restore buttons
+            set_buttons_state("normal")
     threading.Thread(target=worker, daemon=True).start()
 
 

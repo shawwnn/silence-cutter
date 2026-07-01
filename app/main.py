@@ -90,6 +90,27 @@ def run_pipeline(video_path, output_path=None,
     update_progress_and_status_backend(
         status="Generating segments...", progress=0.80)  # 80%
 
+    # start test
+
+    # print("ENTER generate_segments")
+    # update_progress_and_status_backend(
+    #     status="ENTER generate_segments",
+    #     progress=0.76
+    # )
+
+    # segments = generate_segments(
+    #     video_path,
+    #     keep_intervals
+    # )
+
+    # print("EXIT generate_segments")
+    # update_progress_and_status_backend(
+    #     status="EXIT generate_segments",
+    #     progress=0.80
+    # )
+
+    # end test
+
     print("\n========================")
     print("PHASE 6 - CREATE CONCAT FILE")
     print("========================")

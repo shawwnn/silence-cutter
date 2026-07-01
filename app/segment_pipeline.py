@@ -12,8 +12,13 @@ def generate_segments(video, keep_intervals, output_dir="temp_segments"):
 
     for idx, (start, end) in enumerate(keep_intervals):
         output_video = os.path.join(output_dir, f"segment_{idx + 1}.mp4")
-        print(f"START CUT: {start} -> {end}")
+
+        duration = end - start
+        print(
+            f"Cutting segment {idx + 1}: {start} -> {end} (Duration: {duration})")
+
         cut_segment(video, start, end, output_video)
+
         print(f"DONE CUT: {output_video}")
         segments.append(output_video)
 

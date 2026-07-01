@@ -193,3 +193,100 @@ python main.py --input tests/sample.mp4 --output assets/output/final.mp4
 - Scene detection
 - Auto captions
 - Timeline preview editor
+
+
+## creaete build apps Mode: 
+- create new build apps: 
+
+# Building Silence Cutter
+
+## macOS Build (.app)
+
+Use the following command to generate a macOS application bundle:
+
+```bash
+pyinstaller --clean \
+--windowed \
+--name SilenceCutter \
+--icon assets/icon.icns \
+--add-data "assets:assets" \
+entry.py
+```
+
+Explanation:
+
+* `--clean` → removes old build cache
+* `--windowed` → hides terminal window for GUI applications
+* `--name SilenceCutter` → sets the application name
+* `--icon assets/icon.icns` → sets the macOS app icon
+* `--add-data "assets:assets"` → includes assets (icons, images, FFmpeg, etc.)
+* `entry.py` → application entry point
+
+Generated output:
+
+```text
+dist/
+└── SilenceCutter.app
+```
+
+Run the application:
+
+```bash
+open dist/SilenceCutter.app
+```
+
+---
+
+## Windows Build (.exe)
+
+Use the following command to generate a Windows executable:
+
+```bash
+pyinstaller --clean ^
+--windowed ^
+--name SilenceCutter ^
+--icon assets\icon.ico ^
+--add-data "assets;assets" ^
+entry.py
+```
+
+Explanation:
+
+* Windows uses `.ico` files for icons
+* Windows uses `;` instead of `:` in `--add-data`
+
+Generated output:
+
+```text
+dist/
+└── SilenceCutter.exe
+```
+
+---
+
+## Debug Build (Recommended During Development)
+
+If the application opens and closes silently, temporarily remove `--windowed` to display terminal logs:
+
+macOS:
+
+```bash
+pyinstaller --clean \
+--name SilenceCutter \
+--icon assets/icon.icns \
+--add-data "assets:assets" \
+entry.py
+```
+
+Windows:
+
+```bash
+pyinstaller --clean ^
+--name SilenceCutter ^
+--icon assets\icon.ico ^
+--add-data "assets;assets" ^
+entry.py
+```
+
+run:
+open dist/SilenceCutter.app

@@ -4,7 +4,7 @@ import subprocess
 # silence_detector.py
 
 
-def detect_silence(video_path, silence_duration=1.0, noise=-32):
+def detect_silence(video_path, silence_duration=0.45, noise=-38):
     filter_arg = f"silencedetect=noise={noise}dB:d={silence_duration}"
 
     cmd = [
