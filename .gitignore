@@ -46,6 +46,7 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+concat_list.txt
 
 # =========================
 # FFmpeg / Media outputs

@@ -57,6 +57,25 @@ User selects video
 - CustomTkinter
 - PyInstaller
 
+## 📦 Dependencies
+
+Install the Python runtime dependency with:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+The application imports `customtkinter` directly. All other Python imports are from the standard library or this repository's `app/` package. Tkinter is also required for the desktop GUI; it is part of the Python standard library but may be packaged separately by some operating systems.
+
+FFmpeg and FFprobe are required external command-line tools. Install them separately and ensure both `ffmpeg` and `ffprobe` are available on the system `PATH`:
+
+```bash
+ffmpeg -version
+ffprobe -version
+```
+
+See [docs/dependencies.md](docs/dependencies.md) for the complete dependency notes. FFmpeg and FFprobe are intentionally excluded from `requirements.txt` because they are not Python packages.
+
 ---
 
 ## 🎥 Processing Strategy
