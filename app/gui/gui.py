@@ -224,4 +224,5 @@ start_button.configure(command=start_cutting)
 # -----------
 # RUN APP
 # -----------
-app.mainloop()
+if __name__ == "__main__":
+    app.mainloop()

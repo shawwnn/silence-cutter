@@ -1,10 +1,16 @@
 import os
 import subprocess
+import shutil
 
 # silence_detector.py
 
 
 def detect_silence(video_path, silence_duration=0.45, noise=-38):
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError(
+            "FFmpeg was not found on PATH. Install FFmpeg and try again."
+        )
+
     filter_arg = f"silencedetect=noise={noise}dB:d={silence_duration}"
 
     cmd = [
