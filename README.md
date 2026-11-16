@@ -1,6 +1,6 @@
 # 🎬 Silence Cutter Desktop App
 
-A lightweight desktop application that automatically removes long pauses and silence from videos while preserving original video quality.
+A lightweight desktop application that detects long silent sections in videos and creates a trimmed copy.
 
 ---
 
@@ -9,6 +9,19 @@ A lightweight desktop application that automatically removes long pauses and sil
 This tool is designed for content creators who want cleaner, more concise videos without manual editing.
 
 It processes videos locally using FFmpeg and removes silent segments based on configurable thresholds.
+
+## Application Preview
+
+Silence Cutter automatically detects silent sections and creates a trimmed video using FFmpeg.
+
+![Silence Cutter Workflow](assets/silence-cutter-preview.png)
+
+### Workflow
+
+1. Launch the application.
+2. Select a video and configure the silence duration.
+3. Wait for video processing to finish.
+4. Open the generated output folder.
 
 ---
 
@@ -19,8 +32,8 @@ It processes videos locally using FFmpeg and removes silent segments based on co
 - Rule-based silence detection using FFmpeg
 - Local video processing (no cloud)
 - Desktop GUI (CustomTkinter)
-- High-quality re-encoding (CRF 18–20)
-- MP4 input/output support
+- Video segment trimming and merging with FFmpeg
+- Common video input/output formats
 - Adjustable silence threshold
 
 ### ❌ Not Included
@@ -35,7 +48,7 @@ It processes videos locally using FFmpeg and removes silent segments based on co
 
 ## 🧠 Core Idea
 
-Remove long silences while keeping video quality visually unchanged.
+Remove long silent sections while keeping the rest of the video in the same order.
 
 ---
 
@@ -52,10 +65,9 @@ User selects video
 ## 🔧 Technology Stack
 
 - Python
-- homebrew
 - FFmpeg
+- FFprobe
 - CustomTkinter
-- PyInstaller
 
 ## 📦 Dependencies
 
@@ -87,28 +99,27 @@ Uses FFmpeg silence detection filters:
 - Silence threshold (e.g. 1.5s+)
 - Start/end timestamps extraction
 
-### Encoding Settings
+### Output
 
-- CRF: 18–20 (high quality)
-- Preset: medium (balanced speed)
-- Audio: AAC (high bitrate or copy)
-- No resizing
+- Selected video segments are copied and merged with FFmpeg.
+- Audio is encoded as AAC while segments are cut.
+- The original resolution is not changed by the application.
 
 ---
 
 ## 🧱 Project Structure
+
+```text
 app/
-├── pipeline/
-│   └──  mutiple python files
-├── main.py                   # Backend pipeline entry point
-│   ├── mutiple python files
-├── gui/
-│   └── gui.py                # GUI entry (CustomTkinter)
-├── tests/
-│   └── sample.mov            # Input video location
-├── assets/outputs
-│       └── sample.mov        # Output video location
-└── concat_list.txt           # Logs how videos cut into segmeents
+├── gui/gui.py                # Desktop GUI
+├── main.py                   # Processing pipeline
+├── silence_parser.py         # Parse FFmpeg silence logs
+├── cut_builder.py            # Build retained intervals
+└── pipeline/                 # Output validation and cleanup
+assets/                       # Application assets and generated outputs
+tests/                        # Automated processing tests
+entry.py                      # Packaged application entry point
+```
 
 
 ---
@@ -137,20 +148,20 @@ Progress: ███████░░░
 
 ## 🧪 Build Plan
 
-### 1. FFmpeg Setup
-Test silence detection in terminal
+### 1. Dependencies
+Install the Python and external dependencies described above.
 
-### 2. Core Script
-Extract silence timestamps in Python
+### 2. Processing Pipeline
+Parse silence timestamps and build retained intervals.
 
 ### 3. Video Processing
-Implement cut + merge pipeline
+Cut and merge retained segments with FFmpeg.
 
 ### 4. GUI
-Build CustomTkinter interface
+Provide the desktop interface for selecting videos and starting processing.
 
-### 5. Packaging
-PyInstaller (.app / .exe)
+### 5. Testing
+Run the automated processing tests with `python -m pytest`.
 
 ---
 
@@ -171,8 +182,7 @@ Input:
 Output:
 - Clean video with:
   - long silences removed
-  - minimal quality loss
-  - similar file size
+  - retained segments joined in order
 
 
 ---
@@ -187,13 +197,10 @@ This launches the desktop interface.
 
 From the GUI:
 Select video
-Set silence threshold           # ongoing feature
-Click Start Processing
+Set silence duration
+Click Start Cutting
 Backend pipeline runs automatically
 
-2. Run backend directly (CLI / testing mode)
-Use this if you want to bypass GUI and test pipeline logic:
-python main.py --input tests/sample.mp4 --output assets/output/final.mp4
 ---
 
 ## ⚠️ Notes
@@ -201,7 +208,7 @@ python main.py --input tests/sample.mp4 --output assets/output/final.mp4
 - Fully offline tool
 - No uploads required
 - Optimized for simplicity and speed
-- Portfolio-grade FFmpeg project
+- Designed for local, simple video cleanup
 
 ---
 
