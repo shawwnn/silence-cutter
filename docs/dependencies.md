@@ -24,3 +24,19 @@ ffprobe -version
 ```
 
 FFmpeg and FFprobe are intentionally not listed in `requirements.txt` because they are external executables, not Python packages.
+
+## Testing
+
+Test dependencies are kept separate from runtime dependencies. Install them with:
+
+```bash
+python -m pip install -r requirements-dev.txt
+```
+
+Run the automated tests from the repository root with:
+
+```bash
+python -m pytest
+```
+
+The current tests cover silence-log parsing, retained video interval calculation, and default output filename generation. GUI behavior and FFmpeg execution are not automated by this test suite.
