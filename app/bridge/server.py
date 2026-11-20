@@ -93,6 +93,17 @@ def _probe_metadata(path: Path) -> dict[str, Any]:
     }
 
 
+def _save_upload(file_storage) -> tuple[Path, str]:
+    if file_storage is None or not file_storage.filename:
+        raise ValueError("A video file is required")
+
+    upload_dir = Path(tempfile.mkdtemp(prefix="silence-cutter-upload-"))
+    safe_name = Path(file_storage.filename).name
+    input_path = upload_dir / safe_name
+    file_storage.save(input_path)
+    return input_path, str(upload_dir)
+
+
 def _worker(job_id: str, input_path: str, output_path: str,
             duration: float, noise_db: float, temp_dir: str,
             events: multiprocessing.Queue):
@@ -211,6 +222,12 @@ def create_app(job_manager: JobManager | None = None) -> Flask:
     @app.post("/api/metadata")
     def metadata():
         try:
+            if request.files.get("file"):
+                path, upload_dir = _save_upload(request.files["file"])
+                try:
+                    return jsonify(_probe_metadata(path))
+                finally:
+                    shutil.rmtree(upload_dir, ignore_errors=True)
             payload = request.get_json(silent=True) or {}
             path = _validate_input(payload.get("input_path"))
             return jsonify(_probe_metadata(path))
@@ -219,13 +236,19 @@ def create_app(job_manager: JobManager | None = None) -> Flask:
 
     @app.post("/api/jobs")
     def start_job():
-        payload = request.get_json(silent=True) or {}
+        payload = request.form.to_dict() if request.files else (request.get_json(silent=True) or {})
         try:
-            path = _validate_input(payload.get("input_path"))
+            upload_dir = None
+            if request.files.get("file"):
+                path, upload_dir = _save_upload(request.files["file"])
+            else:
+                path = _validate_input(payload.get("input_path"))
             duration, noise_db = _validate_settings(payload)
             _probe_metadata(path)
             return jsonify(manager.start(path, duration, noise_db)), 202
         except (ValueError, RuntimeError) as exc:
+            if upload_dir:
+                shutil.rmtree(upload_dir, ignore_errors=True)
             return _error(str(exc))
 
     @app.get("/api/jobs/<job_id>")

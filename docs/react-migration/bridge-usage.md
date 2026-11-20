@@ -40,7 +40,7 @@ Expected response:
 
 ## What the bridge does
 
-1. React sends a local video path and the two silence settings.
+1. React sends the selected file and the two silence settings. A normal browser cannot read the user's absolute file path, so the bridge receives a local upload copy.
 2. Flask validates the request.
 3. Python starts the existing processing pipeline in a worker process.
 4. The worker calls FFmpeg and FFprobe.

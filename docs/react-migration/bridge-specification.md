@@ -26,7 +26,9 @@ Returns `{ "ok": true }` when the bridge is running.
 
 ### `POST /api/metadata`
 
-Request:
+Browser request: multipart form data with a `file` field.
+
+Desktop-host request:
 
 ```json
 { "input_path": "/absolute/path/to/video" }
@@ -36,7 +38,9 @@ Success response includes path, filename, size, duration, and stream information
 
 ### `POST /api/jobs`
 
-Request:
+Browser request: multipart form data with `file`, `silence_duration`, and `noise_db` fields.
+
+Desktop-host request:
 
 ```json
 {

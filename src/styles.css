@@ -1,0 +1,20 @@
+:root { font-family: Inter, system-ui, sans-serif; color: #f4f7ee; background: #111510; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+.shell { width: min(900px, 100%); margin: 0 auto; padding: 8rem 1.25rem; }
+.eyebrow { color: #b8d86b; letter-spacing: .08em; text-transform: uppercase; font-size: .75rem; }
+h1 { font-size: clamp(2.8rem, 8vw, 6rem); line-height: .95; margin: 1rem 0; }
+.intro { max-width: 520px; color: #b9c1b3; font-size: 1.1rem; }
+.card { margin-top: 3rem; padding: 1.25rem; border: 1px solid #35402f; border-radius: 1rem; background: #1b2119; }
+.dropzone { min-height: 170px; display: grid; place-content: center; gap: .6rem; text-align: center; border: 1px dashed #7c9e3e; border-radius: .75rem; cursor: pointer; }
+.dropzone span { font-size: 1.2rem; font-weight: 700; }
+.dropzone small, .metadata, .status { color: #b9c1b3; }
+.dropzone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.controls { display: grid; gap: 1rem; margin: 1.5rem 0; }
+.controls label { display: grid; gap: .5rem; }
+output { color: #b8d86b; }
+input[type="range"] { width: 100%; accent-color: #b8d86b; }
+button { width: 100%; border: 0; border-radius: .6rem; padding: .9rem 1rem; background: #b8d86b; color: #111510; font-weight: 800; cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .45; }
+.error { color: #ff9d9d; }
+@media (max-width: 600px) { .shell { padding-top: 4rem; } }
