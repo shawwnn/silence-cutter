@@ -22,7 +22,7 @@ Baseline: Silence Cutter React + Vite Migration Specification
 | P1 | Backend reliability updates | In progress | `app/main.py`, `app/segment_pipeline.py`, `app/bridge/server.py` | Improved settings, stage progress, segment progress, metadata labeling, and worker completion state; real-media verification pending |
 | P0-5 | Define Python bridge contract | Completed | `docs/react-migration/bridge-specification.md` | Flask option approved and implemented |
 | P2 | React + Vite foundation | Completed | `package.json`, `vite.config.js`, `src/` | Production build verified |
-| P3 | UI workflow implementation | In progress | `src/main.jsx` | File metadata, settings, stage progress, job polling, and cancellation wired; real-media verification pending |
+| P3 | UI workflow implementation | In progress | `src/main.jsx`, `src/components.jsx`, `src/styles.css` | Reference workspace UI implemented with real Flask integration; real-media verification pending |
 | P4 | Integration and cancellation | In progress | `src/main.jsx`, `app/bridge/server.py` | Browser upload, polling, and cancel action implemented; real-media verification pending |
 | P5 | End-to-end verification | Pending | — | Requires frontend and bridge completion |
 
@@ -37,3 +37,4 @@ An activity may be marked completed only with a commit, test result, build resul
 | 0 | 2026-11-20 | Created lightweight React/Vite migration baseline | Final approved scope | Approved |
 | 1 | 2026-11-20 | Added Flask bridge, React/Vite foundation, and automated integration coverage | Implement approved bridge option and portfolio UI milestone | Approved |
 | 2 | 2026-11-21 | Corrected metadata display, worker completion state, and progress reporting | Manual test exposed alias formatting, stale running state, and coarse progress | Pending manual verification |
+| 3 | 2026-11-21 | Replaced minimal React presentation with approved reference workspace UI | User approved reference UI as the target design | Pending manual verification |
