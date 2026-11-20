@@ -17,7 +17,9 @@ from app.video_merger import concat_segments
 def run_pipeline(video_path, output_path=None,
                  progress_callback=None,
                  status_callback=None,
-                 silence_duration=1.0):
+                 silence_duration=1.0,
+                 noise_db=-60.0,
+                 temp_dir="temp_segments"):
     def update_progress_and_status_backend(status=None, progress=None):
         if progress_callback and progress is not None:
             progress_callback(progress)
@@ -49,10 +51,14 @@ def run_pipeline(video_path, output_path=None,
     print("PHASE 1 - DETECT SILENCE")
     print("========================")
 
-    print(f"Using silence threshold: {silence_duration}s")
+    print(
+        f"Using silence duration: {silence_duration}s; "
+        f"noise threshold: {noise_db}dB"
+    )
     logs = detect_silence(
         video_path,
-        silence_duration
+        silence_duration,
+        noise_db
     )
 
     update_progress_and_status_backend(
@@ -86,7 +92,7 @@ def run_pipeline(video_path, output_path=None,
     print("PHASE 5 - GENERATE SEGMENTS")
     print("========================")
 
-    segments = generate_segments(video_path, keep_intervals)
+    segments = generate_segments(video_path, keep_intervals, temp_dir)
     update_progress_and_status_backend(
         status="Generating segments...", progress=0.80)  # 80%
 
@@ -115,7 +121,10 @@ def run_pipeline(video_path, output_path=None,
     print("PHASE 6 - CREATE CONCAT FILE")
     print("========================")
 
-    list_file = create_concat_file(segments)
+    list_file = create_concat_file(
+        segments,
+        str(Path(temp_dir) / "concat_list.txt")
+    )
     update_progress_and_status_backend(
         status="Creating concat file...", progress=0.85)  # 85%
 
@@ -131,7 +140,7 @@ def run_pipeline(video_path, output_path=None,
     print("PHASE 8 - FINALIZE")
     print("========================")
 
-    finalize_pipeline(output_path)
+    finalize_pipeline(output_path, temp_dir)
     update_progress_and_status_backend(
         status="Finalizing...", progress=1)  # 100%
 
