@@ -1,6 +1,8 @@
 from app import main
 from app.cut_builder import build_keep_intervals
+from app.pipeline.no_silence_detected import NoSilenceDetected
 from app.silence_parser import parse_silence
+import pytest
 
 
 def test_parse_silence_extracts_completed_intervals():
@@ -32,7 +34,11 @@ def test_build_keep_intervals_retains_content_around_silences():
 
 def test_run_pipeline_generates_default_output_filename(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(main, "detect_silence", lambda *args: "")
+    monkeypatch.setattr(
+        main,
+        "detect_silence",
+        lambda *args: "silence_start: 1\nsilence_end: 2 | silence_duration: 1",
+    )
     monkeypatch.setattr(main, "get_video_duration", lambda *args: 10.0)
     monkeypatch.setattr(main, "generate_segments", lambda *args: [])
     monkeypatch.setattr(main, "create_concat_file", lambda *args: "concat.txt")
@@ -42,3 +48,12 @@ def test_run_pipeline_generates_default_output_filename(tmp_path, monkeypatch):
     output_path = main.run_pipeline(str(tmp_path / "recording.mov"))
 
     assert output_path == "assets/outputs/recording_cut.mov"
+
+
+def test_run_pipeline_stops_before_output_when_no_silence_found(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "detect_silence", lambda *args: "")
+    monkeypatch.setattr(main, "get_video_duration", lambda *args: 10.0)
+    monkeypatch.setattr(main, "generate_segments", lambda *args: pytest.fail("must not cut"))
+
+    with pytest.raises(NoSilenceDetected):
+        main.run_pipeline(str(tmp_path / "recording.mov"))

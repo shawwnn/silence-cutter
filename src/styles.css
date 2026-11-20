@@ -16,5 +16,11 @@ output { color: #b8d86b; }
 input[type="range"] { width: 100%; accent-color: #b8d86b; }
 button { width: 100%; border: 0; border-radius: .6rem; padding: .9rem 1rem; background: #b8d86b; color: #111510; font-weight: 800; cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .45; }
+.progress-wrap { margin-top: 1rem; color: #b9c1b3; }
+.progress-wrap small { display: block; margin-top: .4rem; }
+.progress-bar { height: .5rem; min-width: 0; border-radius: 99px; background: #b8d86b; transition: width .25s ease; }
 .error { color: #ff9d9d; }
+.result { margin-top: 1rem; padding: 1rem; border-radius: .6rem; background: #27341e; color: #e7f2d5; }
+.result p { margin: .45rem 0 0; color: #cbd8bd; }
+.secondary { margin-top: 1rem; background: transparent; border: 1px solid #b8d86b; color: #dff0b8; }
 @media (max-width: 600px) { .shell { padding-top: 4rem; } }

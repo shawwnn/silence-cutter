@@ -22,8 +22,8 @@ The original input file must remain untouched.
 
 | Setting | Default | Allowed range |
 |---|---:|---:|
-| Minimum silence duration | 2.0 seconds | 0.1–60 seconds |
-| Silence threshold | -60 dB | -100–0 dB |
+| Minimum silence duration | 1.0 second | 0.1–60 seconds |
+| Silence threshold | -38 dB | -100–0 dB |
 
 These values map to FFmpeg's `silencedetect` `duration` and `noise` options.
 

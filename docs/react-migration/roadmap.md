@@ -25,4 +25,6 @@ flowchart TD
     Z --> R
 ```
 
-Current milestone: Phase 0 complete. Next milestone: define and approve the local Python bridge contract.
+Current milestone: React/Vite foundation and Flask bridge implemented; metadata, worker completion, and progress fixes are verified by automated tests/build.
+
+Next milestone: run the manual real-video workflow when a laptop is available. Automated bridge verification is being completed before that manual test.

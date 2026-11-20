@@ -7,14 +7,17 @@ import multiprocessing
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import uuid
+from queue import Empty
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, jsonify, request
 
 from app.main import run_pipeline
+from app.pipeline.no_silence_detected import NoSilenceDetected
 
 
 MIN_DURATION = 0.1
@@ -29,8 +32,8 @@ def _error(message: str, status: int = 400):
 
 def _validate_settings(payload: dict[str, Any]):
     try:
-        duration = float(payload.get("silence_duration", 2.0))
-        noise_db = float(payload.get("noise_db", -60.0))
+        duration = float(payload.get("silence_duration", 1.0))
+        noise_db = float(payload.get("noise_db", -38.0))
     except (TypeError, ValueError):
         raise ValueError("silence_duration and noise_db must be numbers")
 
@@ -75,12 +78,13 @@ def _probe_metadata(path: Path) -> dict[str, Any]:
 
     format_data = data.get("format", {})
     duration = format_data.get("duration")
+    suffix = path.suffix.lower().lstrip(".")
     return {
         "path": str(path),
         "filename": path.name,
         "size_bytes": path.stat().st_size,
         "duration_seconds": float(duration) if duration else None,
-        "format": format_data.get("format_name"),
+        "format": suffix or (format_data.get("format_name", "").split(",")[0]),
         "streams": [
             {
                 "codec_type": stream.get("codec_type"),
@@ -122,10 +126,41 @@ def _worker(job_id: str, input_path: str, output_path: str,
             silence_duration=duration,
             noise_db=noise_db,
             temp_dir=temp_dir,
+            return_summary=True,
         )
-        events.put({"type": "completed", "output_path": result})
+        events.put({
+            "type": "completed",
+            "state": "completed",
+            "message": "Completed",
+            "progress": 1.0,
+            "output_path": result["output_path"],
+            "result": result,
+        })
+        events.close()
+        events.join_thread()
+    except NoSilenceDetected as exc:
+        events.put({
+            "type": "no_silence",
+            "state": "needs_confirmation",
+            "message": "No matching silence found",
+            "result": {
+                "input_duration_seconds": exc.input_duration_seconds,
+                "output_duration_seconds": None,
+                "detected_silence_count": 0,
+                "removed_duration_seconds": 0,
+            },
+        })
+        events.close()
+        events.join_thread()
     except Exception as exc:  # worker boundary must report failures to the API
-        events.put({"type": "failed", "error": str(exc)})
+        events.put({
+            "type": "failed",
+            "state": "failed",
+            "error": str(exc),
+            "message": "Processing failed",
+        })
+        events.close()
+        events.join_thread()
 
 
 class JobManager:
@@ -142,13 +177,26 @@ class JobManager:
 
         worker = self.job["worker"]
         events = self.job["events"]
-        while not events.empty():
-            event = events.get()
+        while True:
+            try:
+                event = events.get_nowait()
+            except Empty:
+                break
             self.job.update(event)
 
         if self.job.get("state") == "running" and not worker.is_alive():
-            self.job["state"] = "failed"
-            self.job.setdefault("error", "Processing stopped unexpectedly")
+            worker.join(timeout=0)
+            # A multiprocessing queue can receive its final event just after
+            # the child exits. Give the feeder a brief chance before failing.
+            while True:
+                try:
+                    event = events.get(timeout=0.1)
+                except Empty:
+                    break
+                self.job.update(event)
+            if self.job.get("state") == "running":
+                self.job["state"] = "failed"
+                self.job.setdefault("error", "Processing stopped unexpectedly")
 
     def public_job(self):
         self._refresh()
@@ -158,7 +206,7 @@ class JobManager:
             key: self.job.get(key)
             for key in (
                 "job_id", "state", "progress", "message", "error",
-                "output_path"
+                "output_path", "result"
             )
         }
 
@@ -264,6 +312,23 @@ def create_app(job_manager: JobManager | None = None) -> Flask:
             return jsonify(manager.cancel(job_id))
         except KeyError as exc:
             return _error(str(exc), 404)
+
+    @app.post("/api/jobs/<job_id>/open-output-folder")
+    def open_output_folder(job_id: str):
+        job = manager.public_job()
+        if not job or job["job_id"] != job_id:
+            return _error("Job not found", 404)
+        if job.get("state") != "completed":
+            return _error("Output folder is available after successful processing")
+
+        output_folder = str(Path(job["output_path"]).resolve().parent)
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", output_folder])
+        elif os.name == "nt":
+            os.startfile(output_folder)
+        else:
+            subprocess.Popen(["xdg-open", output_folder])
+        return jsonify({"opened": True, "output_folder": output_folder})
 
     return app
 

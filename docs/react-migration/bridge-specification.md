@@ -45,8 +45,8 @@ Desktop-host request:
 ```json
 {
   "input_path": "/absolute/path/to/video",
-  "silence_duration": 2.0,
-  "noise_db": -60.0
+  "silence_duration": 1.0,
+  "noise_db": -38.0
 }
 ```
 

@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 
 from app.pipeline.pipeline_finalizer import finalize_pipeline
+from app.pipeline.no_silence_detected import NoSilenceDetected
 from app.silence_detector import detect_silence
 from app.silence_parser import parse_silence
 from app.cut_builder import build_keep_intervals
@@ -18,8 +19,9 @@ def run_pipeline(video_path, output_path=None,
                  progress_callback=None,
                  status_callback=None,
                  silence_duration=1.0,
-                 noise_db=-60.0,
-                 temp_dir="temp_segments"):
+                 noise_db=-38.0,
+                 temp_dir="temp_segments",
+                 return_summary=False):
     def update_progress_and_status_backend(status=None, progress=None):
         if progress_callback and progress is not None:
             progress_callback(progress)
@@ -55,46 +57,65 @@ def run_pipeline(video_path, output_path=None,
         f"Using silence duration: {silence_duration}s; "
         f"noise threshold: {noise_db}dB"
     )
+    update_progress_and_status_backend(
+        status="Detecting silence...", progress=0.05)
     logs = detect_silence(
         video_path,
         silence_duration,
         noise_db
     )
 
-    update_progress_and_status_backend(
-        status="Detecting silence...", progress=0.33)  # 33%
-
     print("\n========================")
     print("PHASE 2 - PARSE SILENCES")
     print("========================")
 
-    silences = parse_silence(logs)
     update_progress_and_status_backend(
-        status="Parsing silences...", progress=0.65)  # 20%
+        status="Parsing silences...", progress=0.25)
+    silences = parse_silence(logs)
+    detected_silence_count = len(silences)
+    removed_duration = sum(silence["duration"] for silence in silences)
 
     print("\n========================")
     print("PHASE 3 - VIDEO INFO")
     print("========================")
 
-    video_duration = get_video_duration(video_path)
     update_progress_and_status_backend(
-        status="Fetching video info...", progress=0.70)  # 70%
+        status="Fetching video info...", progress=0.35)
+    video_duration = get_video_duration(video_path)
+
+    if not silences:
+        raise NoSilenceDetected(video_duration)
 
     print("\n========================")
     print("PHASE 4 - BUILD KEEP INTERVALS")
     print("========================")
 
-    keep_intervals = build_keep_intervals(silences, video_duration)
     update_progress_and_status_backend(
-        status="Building keep intervals...", progress=0.75)  # 75%
+        status="Building keep intervals...", progress=0.45)
+    keep_intervals = build_keep_intervals(silences, video_duration)
 
     print("\n========================")
     print("PHASE 5 - GENERATE SEGMENTS")
     print("========================")
 
-    segments = generate_segments(video_path, keep_intervals, temp_dir)
+    segment_count = max(len(keep_intervals), 1)
+
+    def segment_progress(index):
+        update_progress_and_status_backend(
+            progress=0.45 + (0.30 * index / segment_count)
+        )
+
+    def segment_status(index):
+        update_progress_and_status_backend(
+            status=f"Cutting segment {index + 1} of {segment_count}..."
+        )
+
     update_progress_and_status_backend(
-        status="Generating segments...", progress=0.80)  # 80%
+        status=f"Preparing {segment_count} video segment(s)...", progress=0.50)
+    segments = generate_segments(
+        video_path, keep_intervals, temp_dir,
+        segment_progress, segment_status
+    )
 
     # start test
 
@@ -126,25 +147,35 @@ def run_pipeline(video_path, output_path=None,
         str(Path(temp_dir) / "concat_list.txt")
     )
     update_progress_and_status_backend(
-        status="Creating concat file...", progress=0.85)  # 85%
+        status="Creating concat file...", progress=0.80)
 
     print("\n========================")
     print("PHASE 7 - MERGE VIDEO")
     print("========================")
 
-    concat_segments(list_file, output_path)
     update_progress_and_status_backend(
-        status="Merging video...", progress=0.95)  # 95%
+        status="Merging video...", progress=0.85)
+    concat_segments(list_file, output_path)
 
     print("\n========================")
     print("PHASE 8 - FINALIZE")
     print("========================")
 
-    finalize_pipeline(output_path, temp_dir)
     update_progress_and_status_backend(
-        status="Finalizing...", progress=1)  # 100%
+        status="Finalizing...", progress=0.95)
+    finalize_pipeline(output_path, temp_dir)
+    update_progress_and_status_backend(progress=1.0)
 
     print("\nDONE →", output_path)
+
+    if return_summary:
+        return {
+            "output_path": output_path,
+            "input_duration_seconds": video_duration,
+            "output_duration_seconds": get_video_duration(output_path),
+            "detected_silence_count": detected_silence_count,
+            "removed_duration_seconds": removed_duration,
+        }
 
     return output_path
 

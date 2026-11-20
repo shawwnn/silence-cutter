@@ -2,8 +2,19 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 
-const DEFAULT_DURATION = 2
-const DEFAULT_NOISE = -60
+const DEFAULT_DURATION = 1
+const DEFAULT_NOISE = -38
+
+function formatBytes(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function formatDuration(seconds) {
+  if (!seconds) return '—'
+  if (seconds < 60) return `${Math.round(seconds)} sec`
+  return `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} sec`
+}
 
 async function sendFile(path, file, fields = {}) {
   const body = new FormData()
@@ -24,6 +35,8 @@ function App() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [jobId, setJobId] = useState(null)
+  const [progress, setProgress] = useState(0)
+  const [result, setResult] = useState(null)
 
   useEffect(() => {
     if (!jobId) return undefined
@@ -33,10 +46,17 @@ function App() {
         const job = await response.json()
         if (!response.ok) throw new Error(job.error || 'Unable to read job status')
         setStatus(job.message || job.state)
+        setProgress(Number(job.progress || 0))
         if (job.state === 'completed') {
           setLoading(false)
           setJobId(null)
+          setResult(job.result ? { ...job.result, job_id: job.job_id } : null)
           setStatus(`Completed. Output: ${job.output_path}`)
+        } else if (job.state === 'needs_confirmation') {
+          setLoading(false)
+          setJobId(null)
+          setResult(job.result || {})
+          setStatus('No matching silence found. No output was created.')
         } else if (job.state === 'failed' || job.state === 'cancelled') {
           setLoading(false)
           setJobId(null)
@@ -56,6 +76,7 @@ function App() {
     if (!nextFile) return
     setFile(nextFile)
     setMetadata(null)
+    setResult(null)
     setError('')
     setStatus('Reading video details…')
     try {
@@ -73,6 +94,7 @@ function App() {
     setLoading(true)
     setError('')
     setStatus('Processing…')
+    setProgress(0)
     try {
       const job = await sendFile('/api/jobs', file, {
         silence_duration: duration,
@@ -83,6 +105,7 @@ function App() {
     } catch (err) {
       setError(err.message)
       setStatus('Processing could not start.')
+      setLoading(false)
     }
   }
 
@@ -92,6 +115,16 @@ function App() {
     setLoading(false)
     setJobId(null)
     setStatus('Processing cancelled.')
+    setProgress(0)
+  }
+
+  async function openOutputFolder() {
+    if (!jobId && !result) return
+    const completedJobId = jobId || result.job_id
+    if (!completedJobId) return
+    const response = await fetch(`/api/jobs/${completedJobId}/open-output-folder`, { method: 'POST' })
+    const data = await response.json()
+    if (!response.ok) setError(data.error || 'Unable to open output folder')
   }
 
   return (
@@ -107,7 +140,7 @@ function App() {
           <input type="file" onChange={chooseFile} />
         </label>
 
-        {metadata && <div className="metadata">{metadata.format || 'Video'} · {metadata.size_bytes} bytes · {metadata.duration_seconds?.toFixed(1) || '—'} seconds</div>}
+        {metadata && <div className="metadata">{metadata.format?.toUpperCase() || 'VIDEO'} · {formatBytes(metadata.size_bytes)} · {formatDuration(metadata.duration_seconds)}</div>}
 
         <div className="controls">
           <label>Silence duration: <output>{duration}s</output>
@@ -119,8 +152,21 @@ function App() {
         </div>
 
         <button onClick={loading ? cancel : start} disabled={!metadata}>{loading ? 'Cancel processing' : 'Remove silence'}</button>
+        {loading && <div className="progress-wrap" aria-label="Processing progress">
+          <div className="progress-bar" style={{ width: `${Math.round(progress * 100)}%` }} />
+          <small>{Math.round(progress * 100)}% · Longer videos may take more time.</small>
+        </div>}
         <p className="status" role="status">{status}</p>
         {error && <p className="error" role="alert">{error}</p>}
+        {result && <div className="result" role="status">
+          <strong>{result.detected_silence_count ? 'Silence removed' : 'No matching silence found'}</strong>
+          <p>Input: {formatDuration(result.input_duration_seconds)} · Output: {formatDuration(result.output_duration_seconds)}</p>
+          <p>Detected: {result.detected_silence_count} interval(s) · Removed: {formatDuration(result.removed_duration_seconds)}</p>
+          {!result.detected_silence_count && <>
+            <p>No output was created. Try a shorter duration or a higher threshold, such as −45 dB.</p>
+          </>}
+          {result.output_path && <button className="secondary" onClick={openOutputFolder}>Open output folder</button>}
+        </div>}
       </section>
     </main>
   )
