@@ -9,7 +9,7 @@ def test_health_endpoint(tmp_path):
     response = app.test_client().get("/api/health")
 
     assert response.status_code == 200
-    assert response.get_json() == {"ok": True}
+    assert response.get_json() == {"ok": True, "public_mode": False}
 
 
 def test_metadata_rejects_missing_input(tmp_path):
@@ -40,16 +40,15 @@ def test_job_rejects_invalid_settings_before_media_probe(tmp_path):
 
 def test_multipart_job_receives_duration_and_noise_values(monkeypatch, tmp_path):
     class FakeManager:
-        def start(self, input_path, duration, noise_db):
-            assert input_path.is_file()
+        def start_upload(self, file_storage, duration, noise_db):
+            assert file_storage.filename == "sample.mp4"
             assert duration == 3.5
             assert noise_db == -42.0
-            return {"job_id": "job-1", "state": "running"}
+            return ({"job_id": "job-1", "state": "running"}, {"has_audio": True})
 
         def public_job(self):
             return None
 
-    monkeypatch.setattr(server, "_probe_metadata", lambda path: {"has_audio": True})
     app = create_app(FakeManager())
 
     response = app.test_client().post(
@@ -64,6 +63,7 @@ def test_multipart_job_receives_duration_and_noise_values(monkeypatch, tmp_path)
 
     assert response.status_code == 202
     assert response.get_json()["job_id"] == "job-1"
+    assert response.get_json()["media"] == {"has_audio": True}
 
 
 def test_job_rejects_duplicate_active_job(monkeypatch, tmp_path):
@@ -84,7 +84,7 @@ def test_job_rejects_duplicate_active_job(monkeypatch, tmp_path):
         json={"input_path": str(input_file)},
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 409
     assert "already running" in response.get_json()["error"]
 
 
@@ -115,3 +115,61 @@ def test_cancel_endpoint_returns_cancelled_state():
 
     assert response.status_code == 200
     assert response.get_json()["state"] == "cancelled"
+
+
+def test_public_mode_rejects_legacy_local_path_and_metadata_preflight(tmp_path):
+    app = create_app(JobManager(tmp_path / "outputs"), public_mode=True)
+
+    metadata = app.test_client().post("/api/metadata", json={"input_path": "/tmp/video.mp4"})
+    job = app.test_client().post("/api/jobs", json={"input_path": "/tmp/video.mp4"})
+
+    assert metadata.status_code == 405
+    assert job.status_code == 400
+    assert job.get_json()["code"] == "file_required"
+
+
+def test_public_mode_rejects_oversized_request_before_job_creation(tmp_path):
+    app = create_app(JobManager(tmp_path / "outputs"), public_mode=True)
+    app.config["MAX_CONTENT_LENGTH"] = 1
+
+    response = app.test_client().post(
+        "/api/jobs",
+        data={"file": (io.BytesIO(b"too large"), "sample.mp4")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 413
+    assert response.get_json()["code"] == "file_too_large"
+
+
+def test_public_job_hides_filesystem_paths(tmp_path):
+    manager = JobManager(tmp_path / "outputs", public_mode=True)
+    manager.job = {
+        "job_id": "job-1",
+        "state": "completed",
+        "progress": 1.0,
+        "message": "Completed",
+        "result": {"output_path": "/private/server/output.mp4", "input_duration_seconds": 10},
+        "completed_at": server.time.time(),
+        "worker": type("Worker", (), {"is_alive": lambda self: False})(),
+        "events": type("Events", (), {"get_nowait": lambda self: (_ for _ in ()).throw(server.Empty)})(),
+    }
+
+    public = manager.public_job()
+
+    assert public["result"] == {"input_duration_seconds": 10}
+    assert "output_path" not in public
+    assert "/private/server" not in str(public)
+
+
+def test_expired_public_job_deletes_job_directory(tmp_path):
+    job_dir = tmp_path / "job"
+    job_dir.mkdir()
+    (job_dir / "output.mp4").write_bytes(b"output")
+    manager = JobManager(tmp_path / "outputs", public_mode=True, retention_seconds=1)
+    manager.job = {"state": "completed", "job_dir": str(job_dir), "completed_at": server.time.time() - 2}
+
+    manager._expire_if_needed()
+
+    assert manager.job["state"] == "expired"
+    assert not job_dir.exists()

@@ -1,0 +1,13 @@
+.git
+.pytest_cache
+__pycache__/
+*.py[cod]
+node_modules/
+dist/
+web-dist/
+assets/outputs/
+assets/deprecated/
+tests/
+docs/
+silence-cutter_uiux-mockups/
+.DS_Store

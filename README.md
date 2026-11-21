@@ -220,6 +220,12 @@ Select a video, configure silence duration and threshold, then choose **Remove s
 - Optimized for simplicity and speed
 - Designed for local, simple video cleanup
 
+## 🌐 Portfolio Deployment
+
+The default development workflow is intentionally local-first: the React interface talks to a Flask bridge on the same computer, and videos do not leave that computer. The repository now also includes a Docker/Render portfolio-demo configuration that accepts temporary uploads, produces a download, and deletes job files after 30 minutes. It has not yet been verified in a live Render deployment.
+
+When you are ready to create a public portfolio demo, follow the beginner-focused [Render portfolio deployment guide](docs/deployment/render-portfolio-guide.md). It explains Docker, the required upload/download and temporary-file changes, safety limits, and the manual Render steps without assuming Docker experience.
+
 ---
 
 ## 📈 Future Improvements

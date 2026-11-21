@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { cancelJob, getJob, openOutputFolder, sendVideo } from './api'
+import { cancelJob, getDownloadUrl, getHealth, getJob, openOutputFolder, sendVideo } from './api'
 import { Logo, ProcessPanel, Settings, VideoStage, WorkflowSteps } from './components'
 import './styles.css'
 import './centered.css'
@@ -15,6 +15,11 @@ function App() {
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [publicMode, setPublicMode] = useState(false)
+
+  useEffect(() => {
+    getHealth().then((health) => setPublicMode(Boolean(health.public_mode))).catch(() => setPublicMode(false))
+  }, [])
 
   useEffect(() => {
     if (!jobId) return undefined
@@ -44,8 +49,8 @@ function App() {
     if (!nextFile || phase === 'processing') return
     setFile(nextFile); setMetadata(null); setResult(null); setError(''); setPhase('reading')
     try {
-      const details = await sendVideo('/api/metadata', nextFile)
-      setMetadata(details); setPhase(details.has_audio ? 'ready' : 'missing-audio')
+      const details = await readBrowserMetadata(nextFile)
+      setMetadata(details); setPhase('ready')
     } catch (nextError) {
       setError(nextError.message); setPhase('idle'); setFile(null)
     }
@@ -56,9 +61,10 @@ function App() {
     setError(''); setResult(null); setProgress(0); setPhase('processing')
     try {
       const job = await sendVideo('/api/jobs', file, { silence_duration: duration, noise_db: noiseDb })
+      if (job.media) setMetadata(job.media)
       setJobId(job.job_id)
     } catch (nextError) {
-      setError(nextError.message); setPhase('failed')
+      setError(nextError.message); setPhase(nextError.code === 'missing_audio' ? 'missing-audio' : 'failed')
     }
   }
 
@@ -75,9 +81,10 @@ function App() {
 
   const resetForSettings = () => { setResult(null); setError(''); setPhase('ready') }
   const openPicker = () => document.querySelector('[data-file-picker]')?.click()
+  const downloadOutput = () => { if (result?.job_id) window.location.assign(getDownloadUrl(result.job_id)) }
 
   return <div className="app-shell">
-    <header><div className="header-inner"><a className="brand" href="/"><Logo /> <strong>Silence Cutter</strong></a><span>Powered by FFmpeg · runs on your computer</span></div></header>
+    <header><div className="header-inner"><a className="brand" href="/"><Logo /> <strong>Silence Cutter</strong></a><span>{publicMode ? 'Portfolio demo · temporary processing' : 'Powered by FFmpeg · runs on your computer'}</span></div></header>
     <main>
       <input data-file-picker className="hidden-picker" type="file" accept="video/*" onChange={(e) => chooseFile(e.target.files?.[0])} />
       <section className="hero"><h1>Cut the dead air.<br /><em>Keep the video.</em></h1><p>Silence Cutter finds silent stretches in a video and removes them, so you get a tighter cut without opening an editor.</p></section>
@@ -85,11 +92,27 @@ function App() {
       <section className="workspace">
         <VideoStage file={file} metadata={metadata} phase={phase} error={phase === 'idle' ? error : ''} onChoose={chooseFile} />
         <aside><Settings duration={duration} noiseDb={noiseDb} disabled={phase === 'processing' || phase === 'missing-audio'} onDuration={setDuration} onNoise={setNoiseDb} /><hr />
-          <ProcessPanel phase={phase} progress={progress} result={result} error={error} onStart={start} onCancel={cancel} onRetry={resetForSettings} onOpenFolder={showOutputFolder} onChoose={openPicker} />
+          <ProcessPanel phase={phase} progress={progress} result={result} error={error} publicMode={publicMode} onStart={start} onCancel={cancel} onRetry={resetForSettings} onOpenFolder={showOutputFolder} onDownload={downloadOutput} onChoose={openPicker} />
         </aside>
       </section>
     </main>
   </div>
+}
+
+function readBrowserMetadata(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const video = document.createElement('video')
+    video.preload = 'metadata'
+    const finish = (durationSeconds = null) => {
+      URL.revokeObjectURL(url)
+      const suffix = file.name.split('.').pop()?.toLowerCase() || 'video'
+      resolve({ filename: file.name, size_bytes: file.size, duration_seconds: durationSeconds, format: suffix, has_audio: true })
+    }
+    video.onloadedmetadata = () => finish(Number.isFinite(video.duration) ? video.duration : null)
+    video.onerror = () => finish()
+    video.src = url
+  })
 }
 
 createRoot(document.getElementById('root')).render(<StrictMode><App /></StrictMode>)

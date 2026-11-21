@@ -27,6 +27,8 @@ Baseline: Silence Cutter React + Vite Migration Specification
 | P5 | End-to-end verification | Pending | — | Requires frontend and bridge completion |
 | P1-A | Synthetic accurate-export timing tests | Completed | `tests/test_accurate_export_timing.py` | Four timing fixtures passed |
 | P1-B | Missing-audio and output-duration validation | Completed | `app/bridge/server.py`, `app/main.py`, `src/` | Blocks no-audio input; exposes verified success or timing-warning result state |
+| P6-0 | Define public portfolio deployment scope | Completed | `docs/deployment/render-deployment-specification.md` | Approved 100 MB, five-minute, 30-minute retention, one-job, Docker/Render scope |
+| P6 | Public portfolio deployment implementation | In progress | `app/bridge/server.py`, `src/`, `Dockerfile`, `render.yaml`, `docs/deployment/render-deployment-specification.md` | Upload hardening, temporary download flow, and Docker configuration implemented; Docker and live Render verification remain pending |
 
 ## Evidence rules
 
@@ -42,3 +44,6 @@ An activity may be marked completed only with a commit, test result, build resul
 | 3 | 2026-11-21 | Replaced minimal React presentation with approved reference workspace UI | User approved reference UI as the target design | Pending manual verification |
 | 4 | 2026-11-21 | Replaced stream-copy/concat export with one accurate FFmpeg filter graph | Eliminate keyframe-aligned cuts and concat timestamp glitches | Automated sample export verified; pending manual review |
 | 5 | 2026-11-21 | Added audio-track and output-duration validation | Prevent unsupported jobs and false export-success claims | Automated tests passed; pending manual review |
+| 6 | 2026-11-21 | Added a beginner-focused Render/Docker portfolio deployment guide | Record the future public-hosting design without misrepresenting the local-only bridge as deploy-ready | Documentation only; implementation requires future approval |
+| 7 | 2026-11-21 | Defined Render portfolio deployment specification and task-level verification plan | User approved initial free-demo limits and asked to proceed with planning | Implementation remains gated because it changes public media-data handling |
+| 8 | 2026-11-21 | Implemented public-demo upload, cleanup, download, and Docker preparation | User approved deployment implementation tasks D1–D6 | 21 automated tests and Vite build passed; Docker unavailable locally and live Render verification pending |
