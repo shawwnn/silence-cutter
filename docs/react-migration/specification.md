@@ -22,8 +22,8 @@ The original input file must remain untouched.
 
 | Setting | Default | Allowed range |
 |---|---:|---:|
-| Minimum silence duration | 1.0 second | 0.1–60 seconds |
-| Silence threshold | -38 dB | -100–0 dB |
+| Minimum silence duration | 1.0 second | UI: 0.1–1.9 seconds; backend: 0.1–60 seconds |
+| Silence threshold | -38 dB | UI: -60 to -16 dB; backend: -100–0 dB |
 
 These values map to FFmpeg's `silencedetect` `duration` and `noise` options.
 
@@ -31,6 +31,7 @@ These values map to FFmpeg's `silencedetect` `duration` and `noise` options.
 
 - Input selection should not rely on a short hardcoded extension list.
 - FFprobe determines whether the selected file is a usable media input.
+- Selected videos must have a usable audio stream; silence processing is blocked otherwise.
 - Any input readable by the installed FFmpeg/FFprobe is eligible.
 - Every successful result is written as a separate MP4 file.
 - Existing outputs must not be overwritten without an explicit policy.
@@ -70,6 +71,7 @@ These values map to FFmpeg's `silencedetect` `duration` and `noise` options.
 - Cancellation stops the active job and cleans up its temporary files.
 - The original input remains unchanged.
 - A successful job produces a valid MP4.
+- A successful job has a final duration within 0.25 seconds of its expected retained duration.
 - Invalid inputs and backend failures produce understandable errors.
 - Existing backend behavior remains covered by tests.
 - The responsive layout is usable on desktop and narrow screens.

@@ -22,6 +22,7 @@ Open the Vite URL, normally `http://localhost:5173`.
 
 - [ ] Select a valid video.
 - [ ] Confirm metadata appears.
+- [ ] Confirm a no-audio video shows a blocked, understandable warning.
 - [ ] Change silence duration from `1.0` second.
 - [ ] Change noise threshold from `-38 dB`.
 - [ ] Start processing.
@@ -31,6 +32,8 @@ Open the Vite URL, normally `http://localhost:5173`.
 - [ ] Run processing again to completion.
 - [ ] Confirm a separate MP4 output is created.
 - [ ] Confirm the original input file remains unchanged.
+- [ ] Confirm the result reports expected and actual output duration.
+- [ ] Confirm a no-silence video creates no output and shows an adjustment warning.
 - [ ] Try an invalid or unsupported file and confirm a clear error.
 
 Record the result, date, video characteristics, and any failure in the implementation record.

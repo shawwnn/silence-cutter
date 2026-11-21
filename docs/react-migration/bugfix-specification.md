@@ -11,7 +11,7 @@ Address verified usability and processing-result defects without expanding the a
 - Provide an output-folder action only after successful processing.
 - Report input duration, output duration, detected silence count, and removed duration after a job completes.
 - Explain when no silence meets the chosen duration and dB criteria.
-- Stop before segment generation when no silence meets the criteria; do not create output.
+- Stop before export when no silence meets the criteria; do not create output.
 - Preserve the original input file.
 
 ## Deferred

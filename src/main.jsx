@@ -24,6 +24,8 @@ function App() {
         setProgress(Number(job.progress || 0))
         if (job.state === 'completed') {
           setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('completed')
+        } else if (job.state === 'timing_warning') {
+          setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('timing-warning')
         } else if (job.state === 'needs_confirmation') {
           setJobId(null); setResult(job.result); setPhase('no-silence')
         } else if (job.state === 'cancelled') {
@@ -43,7 +45,7 @@ function App() {
     setFile(nextFile); setMetadata(null); setResult(null); setError(''); setPhase('reading')
     try {
       const details = await sendVideo('/api/metadata', nextFile)
-      setMetadata(details); setPhase('ready')
+      setMetadata(details); setPhase(details.has_audio ? 'ready' : 'missing-audio')
     } catch (nextError) {
       setError(nextError.message); setPhase('idle'); setFile(null)
     }
@@ -82,7 +84,7 @@ function App() {
       <WorkflowSteps phase={phase} />
       <section className="workspace">
         <VideoStage file={file} metadata={metadata} phase={phase} error={phase === 'idle' ? error : ''} onChoose={chooseFile} />
-        <aside><Settings duration={duration} noiseDb={noiseDb} disabled={phase === 'processing'} onDuration={setDuration} onNoise={setNoiseDb} /><hr />
+        <aside><Settings duration={duration} noiseDb={noiseDb} disabled={phase === 'processing' || phase === 'missing-audio'} onDuration={setDuration} onNoise={setNoiseDb} /><hr />
           <ProcessPanel phase={phase} progress={progress} result={result} error={error} onStart={start} onCancel={cancel} onRetry={resetForSettings} onOpenFolder={showOutputFolder} onChoose={openPicker} />
         </aside>
       </section>

@@ -49,7 +49,7 @@ def test_multipart_job_receives_duration_and_noise_values(monkeypatch, tmp_path)
         def public_job(self):
             return None
 
-    monkeypatch.setattr(server, "_probe_metadata", lambda path: {})
+    monkeypatch.setattr(server, "_probe_metadata", lambda path: {"has_audio": True})
     app = create_app(FakeManager())
 
     response = app.test_client().post(
@@ -76,7 +76,7 @@ def test_job_rejects_duplicate_active_job(monkeypatch, tmp_path):
 
     input_file = tmp_path / "sample.mp4"
     input_file.write_bytes(b"video bytes")
-    monkeypatch.setattr(server, "_probe_metadata", lambda path: {})
+    monkeypatch.setattr(server, "_probe_metadata", lambda path: {"has_audio": True})
     app = create_app(FakeManager())
 
     response = app.test_client().post(
@@ -86,6 +86,22 @@ def test_job_rejects_duplicate_active_job(monkeypatch, tmp_path):
 
     assert response.status_code == 400
     assert "already running" in response.get_json()["error"]
+
+
+def test_job_rejects_video_without_audio(monkeypatch, tmp_path):
+    class FakeManager:
+        def start(self, *args):
+            pytest.fail("must not start a job without audio")
+
+    input_file = tmp_path / "silent-video.mp4"
+    input_file.write_bytes(b"video bytes")
+    monkeypatch.setattr(server, "_probe_metadata", lambda path: {"has_audio": False})
+    app = create_app(FakeManager())
+
+    response = app.test_client().post("/api/jobs", json={"input_path": str(input_file)})
+
+    assert response.status_code == 400
+    assert response.get_json()["code"] == "missing_audio"
 
 
 def test_cancel_endpoint_returns_cancelled_state():

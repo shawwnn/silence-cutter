@@ -7,9 +7,10 @@ from app.silence_detector import detect_silence
 from app.silence_parser import parse_silence
 from app.cut_builder import build_keep_intervals
 from app.video_info import get_video_duration
-from app.segment_pipeline import generate_segments
-from app.concat_builder import create_concat_file
-from app.video_merger import concat_segments
+from app.filter_graph_exporter import export_precise_intervals
+
+
+DURATION_TOLERANCE_SECONDS = 0.25
 
 
 # main.py
@@ -95,84 +96,35 @@ def run_pipeline(video_path, output_path=None,
     keep_intervals = build_keep_intervals(silences, video_duration)
 
     print("\n========================")
-    print("PHASE 5 - GENERATE SEGMENTS")
-    print("========================")
-
-    segment_count = max(len(keep_intervals), 1)
-
-    def segment_progress(index):
-        update_progress_and_status_backend(
-            progress=0.45 + (0.30 * index / segment_count)
-        )
-
-    def segment_status(index):
-        update_progress_and_status_backend(
-            status=f"Cutting segment {index + 1} of {segment_count}..."
-        )
-
-    update_progress_and_status_backend(
-        status=f"Preparing {segment_count} video segment(s)...", progress=0.50)
-    segments = generate_segments(
-        video_path, keep_intervals, temp_dir,
-        segment_progress, segment_status
-    )
-
-    # start test
-
-    # print("ENTER generate_segments")
-    # update_progress_and_status_backend(
-    #     status="ENTER generate_segments",
-    #     progress=0.76
-    # )
-
-    # segments = generate_segments(
-    #     video_path,
-    #     keep_intervals
-    # )
-
-    # print("EXIT generate_segments")
-    # update_progress_and_status_backend(
-    #     status="EXIT generate_segments",
-    #     progress=0.80
-    # )
-
-    # end test
-
-    print("\n========================")
-    print("PHASE 6 - CREATE CONCAT FILE")
-    print("========================")
-
-    list_file = create_concat_file(
-        segments,
-        str(Path(temp_dir) / "concat_list.txt")
-    )
-    update_progress_and_status_backend(
-        status="Creating concat file...", progress=0.80)
-
-    print("\n========================")
-    print("PHASE 7 - MERGE VIDEO")
+    print("PHASE 5 - RENDER PRECISE CUTS")
     print("========================")
 
     update_progress_and_status_backend(
-        status="Merging video...", progress=0.85)
-    concat_segments(list_file, output_path)
+        status="Rendering precise video and audio cuts...", progress=0.50)
+    export_precise_intervals(video_path, keep_intervals, output_path)
 
     print("\n========================")
     print("PHASE 8 - FINALIZE")
     print("========================")
 
     update_progress_and_status_backend(
-        status="Finalizing...", progress=0.95)
+        status="Validating final video...", progress=0.95)
     finalize_pipeline(output_path, temp_dir)
     update_progress_and_status_backend(progress=1.0)
 
     print("\nDONE →", output_path)
 
     if return_summary:
+        expected_duration = sum(end - start for start, end in keep_intervals)
+        output_duration = get_video_duration(output_path)
+        duration_difference = abs(expected_duration - output_duration)
         return {
             "output_path": output_path,
             "input_duration_seconds": video_duration,
-            "output_duration_seconds": get_video_duration(output_path),
+            "expected_duration_seconds": expected_duration,
+            "output_duration_seconds": output_duration,
+            "duration_difference_seconds": duration_difference,
+            "duration_verified": duration_difference <= DURATION_TOLERANCE_SECONDS,
             "detected_silence_count": detected_silence_count,
             "removed_duration_seconds": removed_duration,
         }

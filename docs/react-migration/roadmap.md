@@ -25,6 +25,6 @@ flowchart TD
     Z --> R
 ```
 
-Current milestone: React/Vite foundation and Flask bridge implemented; metadata, worker completion, and progress fixes are verified by automated tests/build.
+Current milestone: React/Vite interface, Flask bridge, accurate filter-graph exporter, synthetic timing tests, audio validation, and output-duration validation are implemented and verified by automated tests/build.
 
-Next milestone: run the manual real-video workflow when a laptop is available. Automated bridge verification is being completed before that manual test.
+Next milestone: run the manual real-video workflow when a laptop is available, then record results and prepare the portfolio review.

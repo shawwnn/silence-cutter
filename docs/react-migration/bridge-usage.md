@@ -22,7 +22,7 @@ The bridge listens only on the local computer at:
 http://127.0.0.1:5050
 ```
 
-The future React application will send requests to this address. It is not a public website or cloud service.
+The React application sends local requests to this address. It is not a public website or cloud service.
 
 ## Basic health check
 

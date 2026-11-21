@@ -4,7 +4,7 @@ Status: Approved for implementation
 
 ## Purpose
 
-Provide a small localhost HTTP bridge that allows a future React + Vite frontend to use the existing Python/FFmpeg processing pipeline.
+Provide a small localhost HTTP bridge that allows the React + Vite frontend to use the existing Python/FFmpeg processing pipeline.
 
 ## Scope
 
@@ -16,7 +16,7 @@ The bridge supports one active processing job at a time and exposes:
 - Read current job status.
 - Cancel the active job.
 
-It does not provide authentication, cloud access, arbitrary command execution, file uploads, or desktop packaging.
+It does not provide authentication, cloud access, arbitrary command execution, or desktop packaging. It accepts browser uploads only for local processing.
 
 ## API contract
 
@@ -34,7 +34,7 @@ Desktop-host request:
 { "input_path": "/absolute/path/to/video" }
 ```
 
-Success response includes path, filename, size, duration, and stream information from FFprobe.
+Success response includes path, filename, size, duration, `has_video`, `has_audio`, and stream information from FFprobe.
 
 ### `POST /api/jobs`
 
@@ -54,9 +54,11 @@ The original file remains untouched. Successful output is an MP4 in the configur
 
 ### `GET /api/jobs/<job_id>`
 
-Returns job state, progress, status message, output path, and error information.
+Returns job state, progress, status message, output path, result summary, and error information.
 
-States: `queued`, `running`, `completed`, `failed`, `cancelled`.
+States: `queued`, `running`, `completed`, `timing_warning`, `needs_confirmation`, `failed`, `cancelled`.
+
+`needs_confirmation` means no interval met the selected criteria; no output file is created. `timing_warning` means an MP4 exists, but its final duration differs from the expected duration by more than 0.25 seconds.
 
 ### `POST /api/jobs/<job_id>/cancel`
 
@@ -70,6 +72,7 @@ Cancels the active job when possible. Cancellation terminates the worker process
 - Only one job may run at a time.
 - The bridge binds to `127.0.0.1` only.
 - FFprobe validates that the input is readable media.
+- Jobs require a video stream and an audio stream.
 - The bridge uses subprocess argument arrays and does not execute user-provided shell commands.
 
 ## Acceptance criteria

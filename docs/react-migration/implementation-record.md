@@ -19,12 +19,14 @@ Baseline: Silence Cutter React + Vite Migration Specification
 | P0-2 | Inspect UI/UX references and interaction notes | Completed | `silence-cutter_uiux-mockups/` | References are design inputs, not existing React code |
 | P0-3 | Confirm product decisions | Completed | Approved conversation decisions | Original preserved; MP4 output; cancellation required |
 | P0-4 | Create approved specification | Completed | `docs/react-migration/specification.md` | Phase 0 documentation deliverable |
-| P1 | Backend reliability updates | In progress | `app/main.py`, `app/segment_pipeline.py`, `app/bridge/server.py` | Improved settings, stage progress, segment progress, metadata labeling, and worker completion state; real-media verification pending |
+| P1 | Backend reliability updates | In progress | `app/main.py`, `app/filter_graph_exporter.py`, automated sample export | Replaced stream-copy/concat with accurate filter-graph render; repository sample export removed 6.56 seconds successfully |
 | P0-5 | Define Python bridge contract | Completed | `docs/react-migration/bridge-specification.md` | Flask option approved and implemented |
 | P2 | React + Vite foundation | Completed | `package.json`, `vite.config.js`, `src/` | Production build verified |
 | P3 | UI workflow implementation | In progress | `src/main.jsx`, `src/components.jsx`, `src/styles.css` | Reference workspace UI implemented with real Flask integration; real-media verification pending |
 | P4 | Integration and cancellation | In progress | `src/main.jsx`, `app/bridge/server.py` | Browser upload, polling, and cancel action implemented; real-media verification pending |
 | P5 | End-to-end verification | Pending | — | Requires frontend and bridge completion |
+| P1-A | Synthetic accurate-export timing tests | Completed | `tests/test_accurate_export_timing.py` | Four timing fixtures passed |
+| P1-B | Missing-audio and output-duration validation | Completed | `app/bridge/server.py`, `app/main.py`, `src/` | Blocks no-audio input; exposes verified success or timing-warning result state |
 
 ## Evidence rules
 
@@ -38,3 +40,5 @@ An activity may be marked completed only with a commit, test result, build resul
 | 1 | 2026-11-20 | Added Flask bridge, React/Vite foundation, and automated integration coverage | Implement approved bridge option and portfolio UI milestone | Approved |
 | 2 | 2026-11-21 | Corrected metadata display, worker completion state, and progress reporting | Manual test exposed alias formatting, stale running state, and coarse progress | Pending manual verification |
 | 3 | 2026-11-21 | Replaced minimal React presentation with approved reference workspace UI | User approved reference UI as the target design | Pending manual verification |
+| 4 | 2026-11-21 | Replaced stream-copy/concat export with one accurate FFmpeg filter graph | Eliminate keyframe-aligned cuts and concat timestamp glitches | Automated sample export verified; pending manual review |
+| 5 | 2026-11-21 | Added audio-track and output-duration validation | Prevent unsupported jobs and false export-success claims | Automated tests passed; pending manual review |

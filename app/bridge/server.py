@@ -26,8 +26,11 @@ MIN_NOISE_DB = -100.0
 MAX_NOISE_DB = 0.0
 
 
-def _error(message: str, status: int = 400):
-    return jsonify({"error": message}), status
+def _error(message: str, status: int = 400, code: str | None = None):
+    payload = {"error": message}
+    if code:
+        payload["code"] = code
+    return jsonify(payload), status
 
 
 def _validate_settings(payload: dict[str, Any]):
@@ -73,7 +76,9 @@ def _probe_metadata(path: Path) -> dict[str, Any]:
         raise RuntimeError("FFprobe returned invalid metadata") from exc
 
     streams = data.get("streams", [])
-    if not any(stream.get("codec_type") == "video" for stream in streams):
+    has_video = any(stream.get("codec_type") == "video" for stream in streams)
+    has_audio = any(stream.get("codec_type") == "audio" for stream in streams)
+    if not has_video:
         raise ValueError("The selected file does not contain a video stream")
 
     format_data = data.get("format", {})
@@ -85,6 +90,8 @@ def _probe_metadata(path: Path) -> dict[str, Any]:
         "size_bytes": path.stat().st_size,
         "duration_seconds": float(duration) if duration else None,
         "format": suffix or (format_data.get("format_name", "").split(",")[0]),
+        "has_video": has_video,
+        "has_audio": has_audio,
         "streams": [
             {
                 "codec_type": stream.get("codec_type"),
@@ -128,10 +135,11 @@ def _worker(job_id: str, input_path: str, output_path: str,
             temp_dir=temp_dir,
             return_summary=True,
         )
+        verified = result["duration_verified"]
         events.put({
-            "type": "completed",
-            "state": "completed",
-            "message": "Completed",
+            "type": "completed" if verified else "timing_warning",
+            "state": "completed" if verified else "timing_warning",
+            "message": "Completed" if verified else "Output timing could not be verified",
             "progress": 1.0,
             "output_path": result["output_path"],
             "result": result,
@@ -292,7 +300,12 @@ def create_app(job_manager: JobManager | None = None) -> Flask:
             else:
                 path = _validate_input(payload.get("input_path"))
             duration, noise_db = _validate_settings(payload)
-            _probe_metadata(path)
+            media = _probe_metadata(path)
+            if not media["has_audio"]:
+                return _error(
+                    "This video has no audio track. Silence Cutter needs audio to detect silence.",
+                    code="missing_audio",
+                )
             return jsonify(manager.start(path, duration, noise_db)), 202
         except (ValueError, RuntimeError) as exc:
             if upload_dir:
