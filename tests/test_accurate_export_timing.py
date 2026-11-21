@@ -32,6 +32,7 @@ def create_source_video(path, duration=5):
         ("cut_at_end", [(0.0, 4.0)], 4.0),
         ("cut_in_middle", [(0.0, 2.0), (3.0, 5.0)], 4.0),
         ("multiple_cuts", [(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)], 3.0),
+        ("many_short_segments", [(0.0, 0.4), (0.8, 1.2), (1.6, 2.0), (2.4, 2.8), (3.2, 3.6), (4.0, 5.0)], 3.0),
     ],
 )
 def test_accurate_export_matches_retained_duration(tmp_path, name, intervals, expected_duration):

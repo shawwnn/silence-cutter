@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import os
 from pathlib import Path
 
 
@@ -47,11 +48,13 @@ def export_precise_intervals(input_video: str, keep_intervals: list[tuple[float,
     output_path = Path(output_video)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     filter_graph = build_filter_graph(keep_intervals)
+    public_mode = os.environ.get("SILENCE_CUTTER_PUBLIC_MODE", "").lower() in {"1", "true", "yes"}
     command = [
-        ffmpeg_path, "-y", "-i", input_video,
+        ffmpeg_path, "-y", "-threads", "1", "-filter_threads", "1",
+        "-filter_complex_threads", "1", "-i", input_video,
         "-filter_complex", filter_graph,
         "-map", "[outv]", "-map", "[outa]",
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+        "-c:v", "libx264", "-preset", "ultrafast" if public_mode else "veryfast", "-crf", "22" if public_mode else "20",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k",
         "-movflags", "+faststart",
