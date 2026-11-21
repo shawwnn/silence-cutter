@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 
 from app.bridge import server
 from app.bridge.server import JobManager, create_app
@@ -141,6 +142,39 @@ def test_public_mode_rejects_oversized_request_before_job_creation(tmp_path):
 
     assert response.status_code == 413
     assert response.get_json()["code"] == "file_too_large"
+
+
+def test_public_mode_rejects_video_above_1080p_before_starting(monkeypatch, tmp_path):
+    manager = JobManager(tmp_path / "outputs", public_mode=True)
+    monkeypatch.setattr(server, "_probe_metadata", lambda path: {
+        "has_audio": True, "duration_seconds": 30,
+        "streams": [{"codec_type": "video", "width": 3840, "height": 2160}],
+    })
+    monkeypatch.setattr(manager, "_start", lambda *args, **kwargs: pytest.fail("must not start"))
+    app = create_app(manager, public_mode=True)
+
+    response = app.test_client().post(
+        "/api/jobs", data={"file": (io.BytesIO(b"video bytes"), "large.mp4")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Public demo supports videos up to 1080p. Use a lower-resolution video."
+
+
+def test_local_mode_does_not_apply_public_resolution_limit(monkeypatch, tmp_path):
+    manager = JobManager(tmp_path / "outputs", public_mode=False)
+    monkeypatch.setattr(server, "_probe_metadata", lambda path: {
+        "has_audio": True, "duration_seconds": 30,
+        "streams": [{"codec_type": "video", "width": 3840, "height": 2160}],
+    })
+    monkeypatch.setattr(manager, "_start", lambda *args, **kwargs: {"job_id": "local-job"})
+
+    job, _media = manager.start_upload(type("Upload", (), {
+        "filename": "large.mp4", "save": lambda self, path: Path(path).write_bytes(b"video bytes"),
+    })(), 1.0, -38.0)
+
+    assert job == {"job_id": "local-job"}
 
 
 def test_public_job_hides_filesystem_paths(tmp_path):

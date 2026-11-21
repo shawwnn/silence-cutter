@@ -16,6 +16,7 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 | Public URL | Render `onrender.com` URL initially |
 | Maximum upload size | 100 MB |
 | Maximum input duration | 5 minutes |
+| Maximum public resolution | 1080p / 2.07 megapixels |
 | Output retention | Up to 30 minutes after completion |
 | Concurrency | One active processing job per service |
 | Output | Separate H.264/AAC MP4 download |
@@ -49,11 +50,12 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 2. The client shows the upload limit and posts the file plus settings once to create a job.
 3. The server streams the upload into an unpredictable per-job temporary directory and rejects oversized requests.
 4. FFprobe rejects unreadable media, video without audio, and input longer than five minutes.
-5. The existing processor runs once; the source server copy is never modified.
-6. The frontend polls status exactly as it does today, without receiving server paths.
-7. On success, the interface shows **Download MP4**. The download endpoint works only for that job while it is retained.
-8. Cancellation, failure, no-silence, completion, and expired jobs remove temporary media safely.
-9. After up to 30 minutes, the job and its downloadable file are unavailable and the UI explains that it expired. Starting a new job may delete the previous job earlier because this MVP retains one job record.
+5. The public demo rejects video streams above 1080p / 2.07 megapixels before processing.
+6. The existing processor runs once; the source server copy is never modified.
+7. The frontend polls status exactly as it does today, without receiving server paths.
+8. On success, the interface shows **Download MP4**. The download endpoint works only for that job while it is retained.
+9. Cancellation, failure, no-silence, completion, and expired jobs remove temporary media safely.
+10. After up to 30 minutes, the job and its downloadable file are unavailable and the UI explains that it expired. Starting a new job may delete the previous job earlier because this MVP retains one job record.
 
 ## API contract changes
 
@@ -72,6 +74,7 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 - A 100 MB-or-smaller valid input can be uploaded once, processed, and downloaded as a separate MP4.
 - A request above 100 MB is rejected with a clear `413` response and no retained upload.
 - A readable video over five minutes is rejected before processing.
+- A public video above 1080p / 2.07 megapixels is rejected before processing; local mode remains unrestricted.
 - No JSON response exposes a server file path.
 - No job media remains after cancellation, failure, no-silence, or the 30-minute expiry.
 - The one-job concurrency rule produces a clear busy response without corrupting either job.
@@ -98,6 +101,7 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 | Visitor media retention | Per-job directories, cleanup on terminal states, expiry sweep, and documented 30-minute window. |
 | Sensitive server paths or logs exposed | Public job serializer allowlist; generic user errors; server diagnostics stay in service logs. |
 | FFmpeg resource usage | Strict input limits, one active process, no permanent uploads, and a lightweight portfolio-only scope. |
+| Free instance restart during export | Reject high-resolution public inputs before export and show a clear recovery message if an upstream response is interrupted. |
 | Free Render cold starts | Explain wake-up delay in the README and portfolio copy. |
 | Regression of local development | Preserve a documented local mode; test both mode boundaries rather than silently changing local workflow. |
 
@@ -111,5 +115,7 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 ## Deployment record
 
 The public deployment is live at [silence-cutter-portfolio.onrender.com](https://silence-cutter-portfolio.onrender.com/), using the free Render plan and Render service `silence-cutter-portfolio`. On 2026-11-21, its tracked branch changed from the temporary `feature/react-vite-migration` branch to `main`; Render successfully deployed main commit `ee219c8` in 40.8 seconds. The Render build log confirms checkout from `main`; `/api/health` returned `{"ok":true,"public_mode":true}` and the public React interface loaded with the revised workflow steps.
+
+Manual testing later exposed a Render instance restart during Phase 5 (FFmpeg export) for a 5.2 MB, 1:25 input that succeeded locally. The browser received an empty response and previously showed a JSON parsing error. The code now handles unavailable/non-JSON service responses with a recovery message and rejects public video streams above 1080p / 2.07 megapixels before creating a job. The exact restart reason was not labeled in Render logs; free-instance resource exhaustion is the working hypothesis.
 
 Local Docker verification was skipped because the workspace could not access the Docker engine. A manual uploaded-video smoke test remains required before considering the deployment fully verified.

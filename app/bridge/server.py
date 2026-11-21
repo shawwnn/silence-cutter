@@ -26,6 +26,8 @@ MIN_DURATION, MAX_DURATION = 0.1, 60.0
 MIN_NOISE_DB, MAX_NOISE_DB = -100.0, 0.0
 MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 MAX_INPUT_DURATION_SECONDS = 5 * 60
+MAX_PUBLIC_VIDEO_DIMENSION = 1920
+MAX_PUBLIC_VIDEO_PIXELS = 1920 * 1080
 OUTPUT_RETENTION_SECONDS = 30 * 60
 PUBLIC_MODE_ENV = "SILENCE_CUTTER_PUBLIC_MODE"
 
@@ -92,6 +94,17 @@ def _probe_metadata(path: Path) -> dict[str, Any]:
             "width": stream.get("width"), "height": stream.get("height"),
         } for stream in streams],
     }
+
+
+def _validate_public_video_size(media: dict[str, Any]) -> None:
+    """Keep free-demo jobs within a resolution the small instance can reasonably render."""
+    video_streams = [stream for stream in media.get("streams", []) if stream.get("codec_type") == "video"]
+    for stream in video_streams:
+        width, height = stream.get("width"), stream.get("height")
+        if not isinstance(width, int) or not isinstance(height, int):
+            continue
+        if max(width, height) > MAX_PUBLIC_VIDEO_DIMENSION or width * height > MAX_PUBLIC_VIDEO_PIXELS:
+            raise ValueError("Public demo supports videos up to 1080p. Use a lower-resolution video.")
 
 
 def _worker(input_path: str, output_path: str, duration: float, noise_db: float,
@@ -243,6 +256,8 @@ class JobManager:
             media = _probe_metadata(input_path)
             if media.get("duration_seconds") and media["duration_seconds"] > MAX_INPUT_DURATION_SECONDS:
                 raise ValueError("Video must be 5 minutes or shorter")
+            if self.public_mode:
+                _validate_public_video_size(media)
             if not media["has_audio"]:
                 raise ValueError("This video has no audio track. Silence Cutter needs audio to detect silence.")
             job = self._start(input_path, duration, noise_db, job_dir=job_dir,

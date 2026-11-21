@@ -43,11 +43,11 @@ function App() {
           setJobId(null); setError(job.error || 'Processing failed.'); setPhase('failed')
         }
       } catch (nextError) {
-        setJobId(null); setError(nextError.message); setPhase('failed')
+        setJobId(null); setError(describeProcessingError(nextError, publicMode)); setPhase('failed')
       }
     }, 500)
     return () => clearInterval(timer)
-  }, [jobId])
+  }, [jobId, publicMode])
 
   async function chooseFile(nextFile) {
     if (!nextFile || phase === 'processing') return
@@ -68,7 +68,7 @@ function App() {
       if (job.media) setMetadata(job.media)
       setJobId(job.job_id)
     } catch (nextError) {
-      setError(nextError.message); setPhase(nextError.code === 'missing_audio' ? 'missing-audio' : 'failed')
+      setError(describeProcessingError(nextError, publicMode)); setPhase(nextError.code === 'missing_audio' ? 'missing-audio' : 'failed')
     }
   }
 
@@ -101,6 +101,13 @@ function App() {
       </section>
     </main>
   </div>
+}
+
+function describeProcessingError(error, publicMode) {
+  if (publicMode && error?.code === 'service_unavailable') {
+    return 'The demo server restarted while rendering. No output was created. Try a shorter or lower-resolution video.'
+  }
+  return error?.message || 'Processing failed.'
 }
 
 function readBrowserMetadata(file) {
