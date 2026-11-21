@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 
 from app.pipeline.pipeline_finalizer import finalize_pipeline
+from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 from app.pipeline.no_silence_detected import NoSilenceDetected
 from app.silence_detector import detect_silence
 from app.silence_parser import parse_silence
@@ -11,6 +12,7 @@ from app.filter_graph_exporter import export_precise_intervals
 
 
 DURATION_TOLERANCE_SECONDS = 0.25
+MIN_RETAINED_DURATION_SECONDS = 0.5
 
 
 # main.py
@@ -94,6 +96,13 @@ def run_pipeline(video_path, output_path=None,
     update_progress_and_status_backend(
         status="Building keep intervals...", progress=0.45)
     keep_intervals = build_keep_intervals(silences, video_duration)
+    expected_duration = sum(end - start for start, end in keep_intervals)
+    if expected_duration <= MIN_RETAINED_DURATION_SECONDS:
+        raise InsufficientRetainedContent(
+            input_duration_seconds=video_duration,
+            retained_duration_seconds=expected_duration,
+            removed_duration_seconds=max(0.0, video_duration - expected_duration),
+        )
 
     print("\n========================")
     print("PHASE 5 - RENDER PRECISE CUTS")
@@ -115,7 +124,6 @@ def run_pipeline(video_path, output_path=None,
     print("\nDONE →", output_path)
 
     if return_summary:
-        expected_duration = sum(end - start for start, end in keep_intervals)
         output_duration = get_video_duration(output_path)
         duration_difference = abs(expected_duration - output_duration)
         return {
