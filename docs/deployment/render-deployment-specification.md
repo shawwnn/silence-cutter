@@ -19,7 +19,7 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 | Maximum public resolution | 1080p / 2.07 megapixels |
 | Output retention | Up to 30 minutes after completion |
 | Concurrency | One active processing job per service |
-| Output | Separate H.264/AAC MP4 download |
+| Output | Separate H.264/AAC MP4 download named `<source-stem>_cut_<local-server-timestamp>.mp4` |
 | Authentication | None for the portfolio MVP |
 | Original input | Never modified; temporary server copy deleted after retention |
 
@@ -53,7 +53,7 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 5. The public demo rejects video streams above 1080p / 2.07 megapixels before processing.
 6. The existing processor runs once; the source server copy is never modified.
 7. The frontend polls status exactly as it does today, without receiving server paths.
-8. On success, the interface shows **Download MP4**. The download endpoint works only for that job while it is retained.
+8. On success, the interface shows **Download MP4**. The download uses a source-based name such as `goo test_cut_2026-11-21_14-32-08.mp4` and works only for that job while it is retained.
 9. Cancellation, failure, no-silence, completion, and expired jobs remove temporary media safely.
 10. After up to 30 minutes, the job and its downloadable file are unavailable and the UI explains that it expired. Starting a new job may delete the previous job earlier because this MVP retains one job record.
 

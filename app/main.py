@@ -4,6 +4,7 @@ import sys
 from app.pipeline.pipeline_finalizer import finalize_pipeline
 from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 from app.pipeline.no_silence_detected import NoSilenceDetected
+from app.output_naming import build_output_name
 from app.silence_detector import detect_silence
 from app.silence_parser import parse_silence
 from app.cut_builder import build_keep_intervals
@@ -48,7 +49,7 @@ def run_pipeline(video_path, output_path=None,
         # make sure folder exists
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        output_path = output_dir / f"{input_file.stem}_cut{input_file.suffix}"
+        output_path = output_dir / build_output_name(input_file.name)
 
         output_path = str(output_path)
 

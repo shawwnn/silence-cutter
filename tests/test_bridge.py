@@ -4,6 +4,7 @@ from pathlib import Path
 from app.bridge import server
 from app.bridge.server import JobManager, create_app
 from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
+from app.output_naming import build_output_name
 
 
 def test_health_endpoint(tmp_path):

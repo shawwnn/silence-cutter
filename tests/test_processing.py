@@ -2,6 +2,8 @@ from app import main
 from app.cut_builder import build_keep_intervals
 from app.pipeline.no_silence_detected import NoSilenceDetected
 from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
+from app.output_naming import build_output_name
+from datetime import datetime
 from app.silence_parser import parse_silence
 import pytest
 
@@ -46,7 +48,13 @@ def test_run_pipeline_generates_default_output_filename(tmp_path, monkeypatch):
 
     output_path = main.run_pipeline(str(tmp_path / "recording.mov"))
 
-    assert output_path == "assets/outputs/recording_cut.mov"
+    assert str(output_path).startswith("assets/outputs/recording_cut_")
+    assert str(output_path).endswith(".mp4")
+
+
+def test_build_output_name_preserves_stem_and_adds_timestamp():
+    assert build_output_name("goo test.mov", now=datetime(2026, 11, 21, 14, 32, 8)) == \
+        "goo test_cut_2026-11-21_14-32-08.mp4"
 
 
 def test_run_pipeline_stops_before_output_when_no_silence_found(tmp_path, monkeypatch):

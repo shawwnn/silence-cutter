@@ -20,6 +20,7 @@ from flask import Flask, jsonify, request, send_file, send_from_directory
 from app.main import run_pipeline
 from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 from app.pipeline.no_silence_detected import NoSilenceDetected
+from app.output_naming import build_output_name
 
 
 MIN_DURATION, MAX_DURATION = 0.1, 60.0
@@ -214,7 +215,8 @@ class JobManager:
                 "expires_in_seconds": max(0, int(completed_at + self.retention_seconds - time.time()))
                 if completed_at else None}
 
-    def _start(self, input_path: Path, duration: float, noise_db: float, *, job_dir: Path, output_path: Path):
+    def _start(self, input_path: Path, duration: float, noise_db: float, *, job_dir: Path,
+               output_path: Path, output_name: str | None = None):
         self._refresh()
         if self.job and self.job.get("state") in {"queued", "running"}:
             raise RuntimeError("Another processing job is already running")
@@ -228,7 +230,7 @@ class JobManager:
             noise_db, str(temp_dir), events), daemon=True)
         self.job = {"job_id": job_id, "state": "queued", "progress": 0.0, "message": "Queued",
                     "events": events, "worker": worker, "job_dir": str(job_dir),
-                    "output_file": str(output_path)}
+                    "output_file": str(output_path), "output_name": output_name or output_path.name}
         worker.start()
         self.job["state"] = "running"
         return self.public_job() or {}
@@ -236,9 +238,8 @@ class JobManager:
     def start(self, input_path: Path, duration: float, noise_db: float):
         """Legacy local-path flow; public mode rejects it at the route boundary."""
         job_dir = Path(tempfile.mkdtemp(prefix="silence-cutter-local-"))
-        output_path = self.output_dir / f"{input_path.stem}_cut.mp4"
-        if output_path.exists():
-            output_path = self.output_dir / f"{input_path.stem}_cut_{uuid.uuid4().hex[:8]}.mp4"
+        output_name = build_output_name(input_path.name)
+        output_path = self.output_dir / output_name
         return self._start(input_path, duration, noise_db, job_dir=job_dir, output_path=output_path)
 
     def start_upload(self, file_storage: Any, duration: float, noise_db: float):
@@ -260,8 +261,9 @@ class JobManager:
                 _validate_public_video_size(media)
             if not media["has_audio"]:
                 raise ValueError("This video has no audio track. Silence Cutter needs audio to detect silence.")
+            output_name = build_output_name(file_storage.filename)
             job = self._start(input_path, duration, noise_db, job_dir=job_dir,
-                              output_path=job_dir / "silence-cutter.mp4")
+                              output_path=job_dir / output_name, output_name=output_name)
             return job, media
         except Exception:
             shutil.rmtree(job_dir, ignore_errors=True)
@@ -293,6 +295,12 @@ class JobManager:
         if not output_file.is_file():
             raise FileNotFoundError("Processed output is unavailable")
         return output_file
+
+    def download_name(self, job_id: str) -> str:
+        self._refresh()
+        if not self.job or self.job.get("job_id") != job_id:
+            raise KeyError("Job not found")
+        return self.job.get("output_name", "silence-cutter.mp4")
 
 
 def _is_public_mode(public_mode: bool | None) -> bool:
@@ -367,7 +375,7 @@ def create_app(job_manager: JobManager | None = None, *, public_mode: bool | Non
     def download(job_id: str):
         try:
             return send_file(manager.download_path(job_id), as_attachment=True,
-                             download_name="silence-cutter.mp4", mimetype="video/mp4")
+                             download_name=manager.download_name(job_id), mimetype="video/mp4")
         except KeyError as exc: return _error(str(exc), 404)
         except FileNotFoundError as exc: return _error(str(exc), 404, "download_expired")
         except RuntimeError as exc: return _error(str(exc), 409)
