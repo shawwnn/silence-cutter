@@ -25,6 +25,6 @@ flowchart TD
     Z --> R
 ```
 
-Current milestone: React/Vite interface, Flask bridge, accurate filter-graph exporter, synthetic timing tests, audio validation, output-duration validation, and pre-export all-content removal protection are implemented and verified by automated tests/build.
+Current milestone: MVP completed—React/Vite interface, Flask bridge, accurate filter-graph exporter, synthetic timing tests, audio validation, output-duration validation, pre-export all-content removal protection, Render deployment, resource-bounded public export, and timestamped output naming are verified.
 
-Next milestone: deploy the verified safety fix, then run the manual real-video workflow when a laptop is available. The next approved UX scope is stage-based processing feedback and a simplified workflow stepper; see `all-content-removal-specification.md`.
+Next milestone: portfolio presentation or optional enhancements. Core MVP implementation is complete; future work should be separately specified and approved.

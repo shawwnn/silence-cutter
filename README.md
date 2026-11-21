@@ -23,6 +23,8 @@ The current local React/Vite interface keeps the workflow focused: select a vide
 3. Wait for video processing to finish.
 4. Review the verified result and open the generated output folder.
 
+Successful outputs are named `<original-name>_cut_<date>_<time>.mp4`, for example `goo test_cut_2026-11-21_14-32-08.mp4`. The original input is never modified.
+
 ---
 
 ## 🚀 MVP Scope
@@ -36,6 +38,7 @@ The current local React/Vite interface keeps the workflow focused: select a vide
 - FFprobe validation of FFmpeg-readable video inputs
 - Adjustable silence duration and dB threshold
 - Cancellation, no-audio validation, and output-duration verification
+- Public Render portfolio demo with 100 MB / five-minute / 1080p limits, temporary retention, and one active job
 
 ### ❌ Not Included
 

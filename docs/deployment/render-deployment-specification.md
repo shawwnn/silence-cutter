@@ -1,6 +1,6 @@
 # Render Portfolio Deployment Specification
 
-Status: Deployed from `main`; real uploaded-video smoke test pending
+Status: Completed MVP deployment from `main`; optional local Docker CLI verification skipped
 
 Baseline: [React + Vite Migration Specification](../react-migration/specification.md)
 
@@ -118,4 +118,4 @@ The public deployment is live at [silence-cutter-portfolio.onrender.com](https:/
 
 Manual testing later exposed a Render instance restart during Phase 5 (FFmpeg export) for a 5.2 MB, 1:25 input that succeeded locally. The browser received an empty response and previously showed a JSON parsing error. The code now handles unavailable/non-JSON service responses with a recovery message and rejects public video streams above 1080p / 2.07 megapixels before creating a job. The exact restart reason was not labeled in Render logs; free-instance resource exhaustion is the working hypothesis. Public exports now also bound FFmpeg/filter parallelism to one thread and use a lighter encoding preset; local exports retain the original quality profile.
 
-Local Docker verification was skipped because the workspace could not access the Docker engine. A manual uploaded-video smoke test remains required before considering the deployment fully verified.
+Local Docker CLI verification was skipped because the workspace could not access the Docker engine. Render successfully built and ran the Docker image, and manual local/Render processing smoke tests completed successfully. This is sufficient for the portfolio MVP; local Docker CLI verification remains optional documentation evidence.
