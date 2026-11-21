@@ -8,13 +8,25 @@ Install the application's runtime Python dependency with:
 python -m pip install -r requirements.txt
 ```
 
-The requirements file contains `customtkinter`, which is imported by the desktop GUI. The other Python imports used by the application are either part of Python's standard library or local modules in `app/`.
+The requirements file contains Flask for the local React-to-Python bridge. The other Python imports used by the application are either part of Python's standard library or local modules in `app/`.
 
-The application currently targets a Python installation that includes Tkinter, which is part of the Python standard library but may need to be installed separately by some operating-system Python distributions.
+## Frontend
+
+Install JavaScript dependencies with:
+
+```bash
+npm install
+```
+
+Start the Vite development server with:
+
+```bash
+npm run dev
+```
 
 ## External software
 
-FFmpeg and FFprobe are required at runtime and must be installed separately. The application invokes the `ffmpeg` and `ffprobe` commands from the system PATH to detect silence, inspect video duration, cut segments, and merge the output.
+FFmpeg and FFprobe are required at runtime and must be installed separately. The application invokes them from the system PATH to detect silence, inspect media, render accurate filter-graph cuts, and validate final output duration.
 
 Verify both commands are available before running the application:
 
@@ -39,4 +51,4 @@ Run the automated tests from the repository root with:
 python -m pytest
 ```
 
-The current tests cover silence-log parsing, retained video interval calculation, and default output filename generation. GUI behavior and FFmpeg execution are not automated by this test suite.
+The tests cover silence-log parsing, retained interval calculation, Flask validation, filter-graph construction, and synthetic FFmpeg timing fixtures. Manual browser and representative-video checks remain required.

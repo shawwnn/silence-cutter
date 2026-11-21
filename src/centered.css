@@ -1,0 +1,16 @@
+/* Default Silence Cutter workspace: centered and intentionally single-column. */
+.hero {
+  max-width: 620px;
+  margin: 44px auto 28px;
+  text-align: center;
+}
+
+.steps {
+  justify-content: center;
+}
+
+.workspace {
+  width: min(680px, 100%);
+  margin: 0 auto;
+  grid-template-columns: 1fr;
+}

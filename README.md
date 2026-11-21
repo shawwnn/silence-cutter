@@ -1,6 +1,6 @@
-# 🎬 Silence Cutter Desktop App
+# 🎬 Silence Cutter
 
-A lightweight desktop application that detects long silent sections in videos and creates a trimmed copy.
+A lightweight local React/Vite and Python application that detects long silent sections in videos and creates an accurately trimmed MP4 copy.
 
 ---
 
@@ -12,16 +12,16 @@ It processes videos locally using FFmpeg and removes silent segments based on co
 
 ## Application Preview
 
-Silence Cutter automatically detects silent sections and creates a trimmed video using FFmpeg.
+The current local React/Vite interface keeps the workflow focused: select a video, set the silence defaults, process it locally, and review the verified output.
 
-![Silence Cutter Workflow](assets/silence-cutter-preview.png)
+![Silence Cutter React interface showing centered workflow, selected-video metadata, and default silence controls](assets/silence-cutter-hero-v2.png)
 
 ### Workflow
 
 1. Launch the application.
 2. Select a video and configure the silence duration.
 3. Wait for video processing to finish.
-4. Open the generated output folder.
+4. Review the verified result and open the generated output folder.
 
 ---
 
@@ -31,10 +31,11 @@ Silence Cutter automatically detects silent sections and creates a trimmed video
 
 - Rule-based silence detection using FFmpeg
 - Local video processing (no cloud)
-- Desktop GUI (CustomTkinter)
-- Video segment trimming and merging with FFmpeg
-- Common video input/output formats
-- Adjustable silence threshold
+- React/Vite local interface with Flask bridge
+- Accurate FFmpeg filter-graph export
+- FFprobe validation of FFmpeg-readable video inputs
+- Adjustable silence duration and dB threshold
+- Cancellation, no-audio validation, and output-duration verification
 
 ### ❌ Not Included
 
@@ -54,10 +55,11 @@ Remove long silent sections while keeping the rest of the video in the same orde
 
 ## ⚙️ System Architecture
 User selects video
+→ FFprobe validates video and audio
 → FFmpeg detects silence intervals
-→ Build keep/cut timestamps
-→ FFmpeg trims and merges segments
-→ Export final MP4
+→ Build keep intervals
+→ FFmpeg trims, normalizes timestamps, and concatenates intervals in one filter graph
+→ Validate final MP4 duration
 
 
 ---
@@ -65,9 +67,10 @@ User selects video
 ## 🔧 Technology Stack
 
 - Python
+- Flask
+- React + Vite
 - FFmpeg
 - FFprobe
-- CustomTkinter
 
 ## 📦 Dependencies
 
@@ -101,9 +104,10 @@ Uses FFmpeg silence detection filters:
 
 ### Output
 
-- Selected video segments are copied and merged with FFmpeg.
-- Audio is encoded as AAC while segments are cut.
-- The original resolution is not changed by the application.
+- Retained intervals are rendered through one FFmpeg filter graph for accurate video/audio boundaries.
+- Output is a separate H.264/AAC MP4.
+- The original file remains unchanged.
+- FFprobe verifies final duration against the expected retained duration.
 
 ---
 
@@ -111,11 +115,13 @@ Uses FFmpeg silence detection filters:
 
 ```text
 app/
-├── gui/gui.py                # Desktop GUI
+├── bridge/server.py          # Local Flask API
 ├── main.py                   # Processing pipeline
+├── filter_graph_exporter.py  # Accurate FFmpeg export
 ├── silence_parser.py         # Parse FFmpeg silence logs
 ├── cut_builder.py            # Build retained intervals
 └── pipeline/                 # Output validation and cleanup
+src/                           # React/Vite interface
 assets/                       # Application assets and generated outputs
 tests/                        # Automated processing tests
 entry.py                      # Packaged application entry point
@@ -129,9 +135,9 @@ entry.py                      # Packaged application entry point
 1. User selects video file
 2. FFmpeg detects silence segments
 3. Extract timestamps
-4. Convert into keep/cut intervals
-5. Rebuild video using FFmpeg concat
-6. Export final MP4
+4. Convert into keep intervals
+5. Render retained intervals in one FFmpeg filter graph
+6. Validate and export final MP4
 
 ---
 
@@ -189,17 +195,21 @@ Output:
 
 ## 🖥️ How to Use the App
 
-1. Run the GUI (Recommended)
-This is the main user entry point:
-python -m app.gui.gui
+In one terminal, start the local Python bridge:
 
-This launches the desktop interface.
+```bash
+python3 -m app.bridge.server
+```
 
-From the GUI:
-Select video
-Set silence duration
-Click Start Cutting
-Backend pipeline runs automatically
+In a second terminal, start the React interface:
+
+```bash
+npm run dev
+```
+
+Open the Vite address shown in the terminal, normally `http://localhost:5173`.
+
+Select a video, configure silence duration and threshold, then choose **Remove silence**. The original remains unchanged and successful output is written as a separate MP4.
 
 ---
 
@@ -221,10 +231,15 @@ Backend pipeline runs automatically
 - Timeline preview editor
 
 
-## creaete build apps Mode: 
-- create new build apps: 
+## Legacy CustomTkinter Packaging
 
-# Building Silence Cutter
+The instructions below apply only to the original CustomTkinter/PyInstaller desktop application. They do not package the current React/Vite + Flask workflow, which is intentionally limited to local development and portfolio demonstration for this migration milestone.
+
+`assets/icon.icns` is retained as the legacy macOS application icon. It is deprecated for the React/Vite web interface, which uses `public/favicon.svg` for its browser-tab icon.
+
+`assets/deprecated/silence-cutter-preview-legacy.png` is retained as the deprecated CustomTkinter-era application preview. The README uses `assets/silence-cutter-hero-v2.png` for the current React/Vite interface.
+
+# Building the Legacy Silence Cutter App
 
 ## macOS Build (.app)
 

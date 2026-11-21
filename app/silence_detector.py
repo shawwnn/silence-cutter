@@ -27,5 +27,11 @@ def detect_silence(video_path, silence_duration=0.45, noise=-38):
         text=True
     )
 
+    if result.returncode != 0:
+        raise RuntimeError(
+            "FFmpeg could not analyze the selected video: "
+            f"{result.stderr.strip() or 'unknown error'}"
+        )
+
     # FFmpeg logs always go to stderr
     return result.stderr

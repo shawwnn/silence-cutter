@@ -57,3 +57,5 @@ outputs/
 *.mp4
 *.mov
 *.mkv
+# Frontend dependencies
+node_modules/
