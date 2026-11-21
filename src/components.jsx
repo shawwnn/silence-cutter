@@ -1,14 +1,20 @@
+import { useEffect, useState } from 'react'
+
 export function Logo() {
   return <span className="logo" aria-hidden="true"><i /><i /><i /><i /></span>
 }
 
 export function WorkflowSteps({ phase }) {
-  const steps = ['Select video', 'Set settings', 'Process', 'Done']
-  const active = phase === 'idle' || phase === 'reading' ? 0 : phase === 'ready' || phase === 'missing-audio' ? 1 : phase === 'processing' || phase === 'failed' || phase === 'no-silence' ? 2 : 3
+  const steps = ['Video & settings', 'Processing', 'Done']
+  const downloadReady = phase === 'completed' || phase === 'timing-warning'
+  const active = phase === 'processing' ? 1 : downloadReady ? 2 : 0
   return <ol className="steps" aria-label="Workflow progress">
-    {steps.map((label, index) => <li key={label} className={index < active ? 'done' : index === active ? 'current' : ''}>
-      <span>{index < active ? '✓' : index + 1}</span>{label}
-    </li>)}
+    {steps.map((label, index) => {
+      const done = downloadReady ? true : index === 0 && phase === 'processing'
+      return <li key={label} className={done ? 'done' : index === active ? 'current' : ''}>
+        <span>{done ? '✓' : index + 1}</span>{label}
+      </li>
+    })}
   </ol>
 }
 
@@ -63,17 +69,30 @@ export function Settings({ duration, noiseDb, disabled, onDuration, onNoise }) {
   </section>
 }
 
-export function ProcessPanel({ phase, progress, result, error, publicMode, onStart, onCancel, onRetry, onOpenFolder, onDownload, onChoose }) {
-  if (phase === 'processing') return <div className="process-panel" role="status"><button className="primary busy" onClick={onCancel}>Cancel processing</button><Progress progress={progress} /><p>Keep this window open. Longer videos take longer.</p></div>
+export function ProcessPanel({ phase, progress, processingMessage, result, error, publicMode, onStart, onCancel, onRetry, onOpenFolder, onDownload, onChoose }) {
+  if (phase === 'processing') return <div className="process-panel" role="status"><ProcessingStatus message={processingMessage} progress={progress} /><button className="primary busy" onClick={onCancel}>Cancel processing</button><p>Keep this window open. Longer videos can take a few minutes.</p></div>
   if (phase === 'completed' && result) return <div className="process-panel result-panel"><h2 className="success">✓ Silence removed</h2><ResultDetails result={result} /><button className="primary" onClick={publicMode ? onDownload : onOpenFolder}>{publicMode ? 'Download MP4' : 'Open output folder'}</button>{publicMode && <p>Download available for up to 30 minutes. Starting another job replaces it.</p>}<button className="text-button centered" onClick={onChoose}>Process another video</button></div>
   if (phase === 'timing-warning' && result) return <div className="process-panel warning-panel"><h2>Output timing could not be verified</h2><p>The MP4 was created, but its duration differs more than expected.</p><ResultDetails result={result} /><button className="primary" onClick={publicMode ? onDownload : onOpenFolder}>{publicMode ? 'Download MP4' : 'Open output folder'}</button><button className="text-button centered" onClick={onRetry}>Try again</button></div>
   if (phase === 'no-silence' && result) return <div className="process-panel warning-panel"><h2>No matching silence found</h2><p>No output was created. Try a shorter duration or a higher threshold, such as −30 dB.</p><ResultDetails result={result} /><button className="primary" onClick={onRetry}>Adjust settings</button><button className="text-button centered" onClick={onChoose}>Choose another video</button></div>
+  if (phase === 'over-cut' && result) return <div className="process-panel warning-panel"><h2>Cut too aggressive</h2><p>Only {formatPreciseDuration(result.expected_duration_seconds)} of {formatDuration(result.input_duration_seconds)} would remain. No output was created.</p><button className="primary" onClick={onRetry}>Keep more video</button><button className="text-button centered" onClick={onChoose}>Choose another video</button></div>
   if (phase === 'missing-audio') return <div className="process-panel warning-panel"><h2>No audio track detected</h2><p>Silence Cutter needs an audio track to find silent sections. Choose a different video to continue.</p><button className="primary" onClick={onChoose}>Choose a different video</button></div>
   if (phase === 'failed') return <div className="process-panel error-panel"><h2>Processing failed</h2><p>{error || 'Processing stopped unexpectedly.'}</p><button className="primary" onClick={onRetry}>Try again</button><button className="text-button centered" onClick={onChoose}>Choose another video</button></div>
   return <div className="process-panel"><button className="primary" disabled={phase !== 'ready'} onClick={onStart}>✂ Remove silence</button><p>{phase === 'ready' ? 'Your original file is never changed.' : phase === 'reading' ? 'Reading the video…' : 'Select a video to get started.'}</p></div>
 }
 
-function Progress({ progress }) { const percent = Math.round((progress || 0) * 100); return <div className="progress"><div><i style={{ width: `${percent}%` }} /></div><span>{percent}%</span></div> }
+function ProcessingStatus({ message, progress }) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  useEffect(() => {
+    const startedAt = Date.now()
+    const timer = setInterval(() => setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000)
+    return () => clearInterval(timer)
+  }, [])
+  const stage = progress < 0.25 ? 0 : progress < 0.5 ? 1 : progress < 0.95 ? 2 : 3
+  const labels = ['Analyze audio', 'Check kept video', 'Render MP4', 'Validate output']
+  return <div className="processing-status"><div className="processing-head"><div><h2>{message}</h2><p>Elapsed {formatElapsed(elapsedSeconds)}</p></div><span className="spinner" aria-hidden="true" /></div><ol className="processing-stages">{labels.map((label, index) => <li key={label} className={index < stage ? 'done' : index === stage ? 'current' : ''}><span>{index < stage ? '✓' : index + 1}</span>{label}</li>)}</ol><div className="progress indeterminate" aria-label="Processing in progress"><div><i /></div></div></div>
+}
 function ResultDetails({ result }) { return <dl className="result-details"><div><dt>Input / output</dt><dd>{formatDuration(result.input_duration_seconds)} → {formatDuration(result.output_duration_seconds)}</dd></div><div><dt>Expected / actual</dt><dd>{formatDuration(result.expected_duration_seconds)} → {formatDuration(result.output_duration_seconds)}{result.duration_difference_seconds !== undefined ? ` (${result.duration_difference_seconds.toFixed(3)} sec difference)` : ''}</dd></div><div><dt>Silence removed</dt><dd>{result.detected_silence_count || 0} interval(s) · {formatDuration(result.removed_duration_seconds || 0)}</dd></div></dl> }
 function formatBytes(bytes) { return bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB` }
 function formatDuration(seconds) { if (seconds === null || seconds === undefined) return '—'; if (seconds < 60) return `${Math.round(seconds)} sec`; return `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} sec` }
+function formatPreciseDuration(seconds) { if (seconds === null || seconds === undefined) return 'almost no video'; return seconds < 1 ? `${seconds.toFixed(1)} sec` : formatDuration(seconds) }
+function formatElapsed(seconds) { return seconds < 60 ? `${seconds} sec` : `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, '0')} sec` }

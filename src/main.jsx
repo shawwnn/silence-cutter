@@ -13,6 +13,7 @@ function App() {
   const [noiseDb, setNoiseDb] = useState(-38)
   const [jobId, setJobId] = useState(null)
   const [progress, setProgress] = useState(0)
+  const [processingMessage, setProcessingMessage] = useState('Preparing your video…')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [publicMode, setPublicMode] = useState(false)
@@ -27,12 +28,15 @@ function App() {
       try {
         const job = await getJob(jobId)
         setProgress(Number(job.progress || 0))
+        setProcessingMessage(job.message || 'Processing your video…')
         if (job.state === 'completed') {
           setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('completed')
         } else if (job.state === 'timing_warning') {
           setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('timing-warning')
         } else if (job.state === 'needs_confirmation') {
           setJobId(null); setResult(job.result); setPhase('no-silence')
+        } else if (job.state === 'settings_warning') {
+          setJobId(null); setResult(job.result); setPhase('over-cut')
         } else if (job.state === 'cancelled') {
           setJobId(null); setPhase('ready')
         } else if (job.state === 'failed') {
@@ -58,7 +62,7 @@ function App() {
 
   async function start() {
     if (!file || phase !== 'ready') return
-    setError(''); setResult(null); setProgress(0); setPhase('processing')
+    setError(''); setResult(null); setProgress(0); setProcessingMessage('Uploading video…'); setPhase('processing')
     try {
       const job = await sendVideo('/api/jobs', file, { silence_duration: duration, noise_db: noiseDb })
       if (job.media) setMetadata(job.media)
@@ -92,7 +96,7 @@ function App() {
       <section className="workspace">
         <VideoStage file={file} metadata={metadata} phase={phase} error={phase === 'idle' ? error : ''} onChoose={chooseFile} />
         <aside><Settings duration={duration} noiseDb={noiseDb} disabled={phase === 'processing' || phase === 'missing-audio'} onDuration={setDuration} onNoise={setNoiseDb} /><hr />
-          <ProcessPanel phase={phase} progress={progress} result={result} error={error} publicMode={publicMode} onStart={start} onCancel={cancel} onRetry={resetForSettings} onOpenFolder={showOutputFolder} onDownload={downloadOutput} onChoose={openPicker} />
+          <ProcessPanel phase={phase} progress={progress} processingMessage={processingMessage} result={result} error={error} publicMode={publicMode} onStart={start} onCancel={cancel} onRetry={resetForSettings} onOpenFolder={showOutputFolder} onDownload={downloadOutput} onChoose={openPicker} />
         </aside>
       </section>
     </main>

@@ -2,6 +2,7 @@ import io
 
 from app.bridge import server
 from app.bridge.server import JobManager, create_app
+from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 
 
 def test_health_endpoint(tmp_path):
@@ -173,3 +174,27 @@ def test_expired_public_job_deletes_job_directory(tmp_path):
 
     assert manager.job["state"] == "expired"
     assert not job_dir.exists()
+
+
+def test_worker_reports_over_cut_without_a_downloadable_output(monkeypatch):
+    class Events:
+        def __init__(self): self.items = []
+        def put(self, item): self.items.append(item)
+        def close(self): pass
+        def join_thread(self): pass
+
+    monkeypatch.setattr(server, "run_pipeline", lambda *args, **kwargs: (_ for _ in ()).throw(
+        InsufficientRetainedContent(254.0, 0.25, 253.75)
+    ))
+    events = Events()
+
+    server._worker("input.mp4", "output.mp4", 1.0, -38.0, "temp", events)
+
+    assert events.items[-1] == {
+        "type": "over_cut", "state": "settings_warning",
+        "message": "Selected settings would remove virtually the entire video",
+        "result": {
+            "input_duration_seconds": 254.0, "expected_duration_seconds": 0.25,
+            "output_duration_seconds": None, "removed_duration_seconds": 253.75,
+        },
+    }

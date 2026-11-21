@@ -56,9 +56,9 @@ The original file remains untouched. Successful output is an MP4 in the configur
 
 Returns job state, progress, status message, output path, result summary, and error information.
 
-States: `queued`, `running`, `completed`, `timing_warning`, `needs_confirmation`, `failed`, `cancelled`.
+States: `queued`, `running`, `completed`, `timing_warning`, `needs_confirmation`, `settings_warning`, `failed`, `cancelled`.
 
-`needs_confirmation` means no interval met the selected criteria; no output file is created. `timing_warning` means an MP4 exists, but its final duration differs from the expected duration by more than 0.25 seconds.
+`needs_confirmation` means no interval met the selected criteria; no output file is created. `settings_warning` means the selected cuts would leave 0.5 seconds or less of video, so export is skipped and no output is available. `timing_warning` means an MP4 exists, but its final duration differs from the expected duration by more than 0.25 seconds.
 
 ### `POST /api/jobs/<job_id>/cancel`
 
@@ -73,6 +73,7 @@ Cancels the active job when possible. Cancellation terminates the worker process
 - The bridge binds to `127.0.0.1` only.
 - FFprobe validates that the input is readable media.
 - Jobs require a video stream and an audio stream.
+- Jobs stop before export when the retained duration is 0.5 seconds or less.
 - The bridge uses subprocess argument arrays and does not execute user-provided shell commands.
 
 ## Acceptance criteria

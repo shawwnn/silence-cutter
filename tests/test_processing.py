@@ -1,6 +1,7 @@
 from app import main
 from app.cut_builder import build_keep_intervals
 from app.pipeline.no_silence_detected import NoSilenceDetected
+from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 from app.silence_parser import parse_silence
 import pytest
 
@@ -55,6 +56,23 @@ def test_run_pipeline_stops_before_output_when_no_silence_found(tmp_path, monkey
 
     with pytest.raises(NoSilenceDetected):
         main.run_pipeline(str(tmp_path / "recording.mov"))
+
+
+@pytest.mark.parametrize("silence_log", [
+    "silence_start: 0\nsilence_end: 10 | silence_duration: 10",
+    "silence_start: 0\nsilence_end: 9.75 | silence_duration: 9.75",
+])
+def test_run_pipeline_stops_before_export_when_cuts_leave_no_usable_video(
+        tmp_path, monkeypatch, silence_log):
+    monkeypatch.setattr(main, "detect_silence", lambda *args: silence_log)
+    monkeypatch.setattr(main, "get_video_duration", lambda *args: 10.0)
+    monkeypatch.setattr(main, "export_precise_intervals", lambda *args: pytest.fail("must not render"))
+
+    with pytest.raises(InsufficientRetainedContent) as raised:
+        main.run_pipeline(str(tmp_path / "recording.mov"))
+
+    assert raised.value.input_duration_seconds == 10.0
+    assert raised.value.retained_duration_seconds <= main.MIN_RETAINED_DURATION_SECONDS
 
 
 def test_pipeline_summary_verifies_expected_output_duration(tmp_path, monkeypatch):

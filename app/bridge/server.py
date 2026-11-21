@@ -18,6 +18,7 @@ from typing import Any
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
 from app.main import run_pipeline
+from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 from app.pipeline.no_silence_detected import NoSilenceDetected
 
 
@@ -113,6 +114,14 @@ def _worker(input_path: str, output_path: str, duration: float, noise_db: float,
                         "output_duration_seconds": None, "detected_silence_count": 0,
                         "removed_duration_seconds": 0,
                     }})
+    except InsufficientRetainedContent as exc:
+        events.put({"type": "over_cut", "state": "settings_warning",
+                    "message": "Selected settings would remove virtually the entire video", "result": {
+                        "input_duration_seconds": exc.input_duration_seconds,
+                        "expected_duration_seconds": exc.retained_duration_seconds,
+                        "output_duration_seconds": None,
+                        "removed_duration_seconds": exc.removed_duration_seconds,
+                    }})
     except Exception as exc:
         events.put({"type": "failed", "state": "failed", "error": str(exc),
                     "message": "Processing failed"})
@@ -142,7 +151,7 @@ class JobManager:
         state = self.job.get("state")
         if state in {"completed", "timing_warning"} and not self.job.get("completed_at"):
             self.job["completed_at"] = time.time()
-        elif state in {"needs_confirmation", "failed", "cancelled"}:
+        elif state in {"needs_confirmation", "settings_warning", "failed", "cancelled"}:
             self._cleanup_job_files()
 
     def _expire_if_needed(self):
