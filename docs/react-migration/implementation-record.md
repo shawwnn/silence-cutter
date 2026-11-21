@@ -28,7 +28,7 @@ Baseline: Silence Cutter React + Vite Migration Specification
 | P1-A | Synthetic accurate-export timing tests | Completed | `tests/test_accurate_export_timing.py` | Four timing fixtures passed |
 | P1-B | Missing-audio and output-duration validation | Completed | `app/bridge/server.py`, `app/main.py`, `src/` | Blocks no-audio input; exposes verified success or timing-warning result state |
 | P6-0 | Define public portfolio deployment scope | Completed | `docs/deployment/render-deployment-specification.md` | Approved 100 MB, five-minute, 30-minute retention, one-job, Docker/Render scope |
-| P6 | Public portfolio deployment implementation | In progress | `app/bridge/server.py`, `src/`, `Dockerfile`, `render.yaml`, `docs/deployment/render-deployment-specification.md` | Upload hardening, temporary download flow, and Docker configuration implemented; Docker and live Render verification remain pending |
+| P6 | Public portfolio deployment implementation | In progress | [Live Render service](https://silence-cutter-portfolio.onrender.com/), commit `5418449`, `app/bridge/server.py`, `src/`, `Dockerfile`, `render.yaml` | Live health and UI verified; real uploaded-video smoke test and local Docker verification remain pending |
 
 ## Evidence rules
 
@@ -47,3 +47,4 @@ An activity may be marked completed only with a commit, test result, build resul
 | 6 | 2026-11-21 | Added a beginner-focused Render/Docker portfolio deployment guide | Record the future public-hosting design without misrepresenting the local-only bridge as deploy-ready | Documentation only; implementation requires future approval |
 | 7 | 2026-11-21 | Defined Render portfolio deployment specification and task-level verification plan | User approved initial free-demo limits and asked to proceed with planning | Implementation remains gated because it changes public media-data handling |
 | 8 | 2026-11-21 | Implemented public-demo upload, cleanup, download, and Docker preparation | User approved deployment implementation tasks D1–D6 | 21 automated tests and Vite build passed; Docker unavailable locally and live Render verification pending |
+| 9 | 2026-11-21 | Deployed the free Render portfolio service | User approved deployment after review of free Docker settings | Commit `5418449` is live; `/api/health` returned public mode and landing UI loaded; uploaded-video smoke test remains pending |

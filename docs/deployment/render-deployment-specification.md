@@ -1,6 +1,6 @@
 # Render Portfolio Deployment Specification
 
-Status: Implementation in progress; local Docker verification and live Render deployment pending
+Status: Deployed to Render; real uploaded-video smoke test pending
 
 Baseline: [React + Vite Migration Specification](../react-migration/specification.md)
 
@@ -110,4 +110,4 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 
 ## Approval gate before implementation
 
-This specification was approved for the stated limits and Docker/Render direction. The public-upload implementation is in progress. A live deployment remains gated on a successful local Docker build and manual live smoke test.
+The public deployment is live at [silence-cutter-portfolio.onrender.com](https://silence-cutter-portfolio.onrender.com/), using the free Render plan and commit `5418449`. Render health verification returned `{"ok": true, "public_mode": true}` and the public React interface loaded successfully. Local Docker verification was skipped because the workspace could not access the Docker engine. A manual uploaded-video smoke test remains required before considering the deployment fully verified.
