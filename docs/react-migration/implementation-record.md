@@ -29,7 +29,7 @@ Baseline: Silence Cutter React + Vite Migration Specification
 | P1-B | Missing-audio and output-duration validation | Completed | `app/bridge/server.py`, `app/main.py`, `src/` | Blocks no-audio input; exposes verified success or timing-warning result state |
 | P1-C | All-content removal pre-export safety | Completed | `docs/react-migration/all-content-removal-specification.md`, `app/main.py`, `app/bridge/server.py`, 25 passing tests | Render testing exposed near-zero MP4 output; jobs now stop before export when retained duration is 0.5 seconds or less |
 | P6-0 | Define public portfolio deployment scope | Completed | `docs/deployment/render-deployment-specification.md` | Approved 100 MB, five-minute, 30-minute retention, one-job, Docker/Render scope |
-| P6 | Public portfolio deployment implementation | In progress | [Live Render service](https://silence-cutter-portfolio.onrender.com/), commit `5418449`, `app/bridge/server.py`, `src/`, `Dockerfile`, `render.yaml` | Live health and UI verified; real uploaded-video smoke test and local Docker verification remain pending |
+| P6 | Public portfolio deployment implementation | In progress | [Live Render service](https://silence-cutter-portfolio.onrender.com/), main commit `ee219c8`, Render deploy log, `app/bridge/server.py`, `src/`, `Dockerfile`, `render.yaml` | Render now deploys `main`; health and revised UI verified. Real uploaded-video smoke test and local Docker verification remain pending. |
 
 ## Evidence rules
 
@@ -51,3 +51,4 @@ An activity may be marked completed only with a commit, test result, build resul
 | 9 | 2026-11-21 | Deployed the free Render portfolio service | User approved deployment after review of free Docker settings | Commit `5418449` is live; `/api/health` returned public mode and landing UI loaded; uploaded-video smoke test remains pending |
 | 10 | 2026-11-21 | Added pre-export all-content removal protection | Manual Render test showed a near-zero-duration MP4 after a long render | Approved; 25 Python tests and Vite build passed; live verification pending deployment |
 | 11 | 2026-11-21 | Replaced static over-cut advice and revised workflow feedback | User rejected a generic fixed dB recommendation and approved evidence-based messaging and simplified stepper | 25 Python tests and Vite build passed; manual UI verification and live deployment remain pending |
+| 12 | 2026-11-21 | Merged the approved deployment fix into main and changed Render to deploy main | Avoid a public service following a temporary feature branch | Render deployed main commit `ee219c8` successfully; health endpoint and updated workflow UI verified |

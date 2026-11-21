@@ -1,6 +1,6 @@
 # Render Portfolio Deployment Specification
 
-Status: Deployed to Render; real uploaded-video smoke test pending
+Status: Deployed from `main`; real uploaded-video smoke test pending
 
 Baseline: [React + Vite Migration Specification](../react-migration/specification.md)
 
@@ -108,6 +108,8 @@ Make Silence Cutter presentable as a small, public portfolio demo without turnin
 - Uploading arbitrary non-video content or supporting unlimited file types/sizes.
 - Claiming production-grade availability or privacy compliance beyond the documented temporary-demo behavior.
 
-## Approval gate before implementation
+## Deployment record
 
-The public deployment is live at [silence-cutter-portfolio.onrender.com](https://silence-cutter-portfolio.onrender.com/), using the free Render plan and commit `5418449`. Render health verification returned `{"ok": true, "public_mode": true}` and the public React interface loaded successfully. Local Docker verification was skipped because the workspace could not access the Docker engine. A manual uploaded-video smoke test remains required before considering the deployment fully verified.
+The public deployment is live at [silence-cutter-portfolio.onrender.com](https://silence-cutter-portfolio.onrender.com/), using the free Render plan and Render service `silence-cutter-portfolio`. On 2026-11-21, its tracked branch changed from the temporary `feature/react-vite-migration` branch to `main`; Render successfully deployed main commit `ee219c8` in 40.8 seconds. The Render build log confirms checkout from `main`; `/api/health` returned `{"ok":true,"public_mode":true}` and the public React interface loaded with the revised workflow steps.
+
+Local Docker verification was skipped because the workspace could not access the Docker engine. A manual uploaded-video smoke test remains required before considering the deployment fully verified.
