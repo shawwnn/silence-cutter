@@ -18,6 +18,7 @@ from flask import Flask, jsonify, request, send_file, send_from_directory
 
 from app.main import process_video
 from app.bridge.media import probe_metadata
+from app.bridge.job_state import public_job as build_public_job
 from app.bridge.validation import (
     validate_input,
     validate_public_video_size,
@@ -134,25 +135,9 @@ class JobManager:
         self._finalize_terminal_state()
         self._expire_if_needed()
 
-    def _public_result(self):
-        if not self.job or not self.job.get("result"):
-            return None
-        allowed = {"input_duration_seconds", "expected_duration_seconds", "output_duration_seconds",
-                   "duration_difference_seconds", "duration_verified", "detected_silence_count",
-                   "removed_duration_seconds"}
-        return {key: value for key, value in self.job["result"].items() if key in allowed}
-
     def public_job(self):
         self._refresh()
-        if not self.job:
-            return None
-        completed_at = self.job.get("completed_at")
-        return {"job_id": self.job["job_id"], "state": self.job.get("state"),
-                "progress": self.job.get("progress"), "message": self.job.get("message"),
-                "error": self.job.get("error"), "result": self._public_result(),
-                "download_available": self.job.get("state") in {"completed", "timing_warning"},
-                "expires_in_seconds": max(0, int(completed_at + self.retention_seconds - time.time()))
-                if completed_at else None}
+        return build_public_job(self.job, self.retention_seconds)
 
     def _start(self, input_path: Path, duration: float, noise_db: float, *, job_dir: Path,
                output_path: Path, output_name: str | None = None):
