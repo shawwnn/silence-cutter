@@ -67,3 +67,13 @@ src/
 ```
 
 This structure is a direction, not a requirement to move every current file immediately.
+
+## Completed checkpoints
+
+- Gate 1: named the shared Python application service `process_video()`.
+- Gate 2: migrated the desktop GUI to `process_video()`.
+- Gate 3: migrated the Flask worker to `process_video()`.
+- Gate 4: isolated bridge media probing, validation, job-state formatting, and the background worker.
+- Gate 5: organized React media utilities, job polling, and terminal job outcomes under `src/features/video-processing/`.
+
+Compatibility aliases remain in the bridge and `main.py` where tests or older callers still use the previous names. They are adapters, not duplicate implementations.
