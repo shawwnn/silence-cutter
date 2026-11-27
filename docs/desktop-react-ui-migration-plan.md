@@ -272,6 +272,19 @@ Scrutiny options for this interim phase:
 
 Working recommendation: use both. Automation is the default gate; the manual smoke test is required when desktop-shell or packaging-related code changes.
 
+## Checkpoint Status: Local Scrutiny Complete
+
+The local scrutiny option is complete and passed:
+
+- React production build passed.
+- Python desktop-entry syntax validation passed.
+- All 30 automated tests passed.
+- GitHub Actions workflow YAML parsed successfully.
+- `app/desktop.py` remains below the 200-line readability guideline.
+- The working tree was clean at the checkpoint.
+
+Decision: do not begin packaging yet. Continue treating the pywebview desktop shell as source code plus a documented development workflow. A packaging phase will begin only when an installable macOS, Windows, or Linux application is actually required.
+
 ## Gate 1 Working Method
 
 Gate 1 will be completed in small documented passes:
