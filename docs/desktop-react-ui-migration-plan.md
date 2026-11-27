@@ -223,6 +223,34 @@ Every completed phase gate must have a checkpoint commit. Before each checkpoint
 
 The current checkpoint is the desktop-shell prototype and end-to-end workflow validation. Tkinter retirement and packaging are intentionally not part of this checkpoint.
 
+## Next Gate: Packaging Scrutiny Options
+
+The next phase is to determine how the working desktop shell becomes a distributable macOS application. Before changing packaging files, we will scrutinize the options in one of these ways.
+
+### Option A: Minimal local packaging spike
+
+Create the smallest macOS package around the existing `app/desktop.py` entry point and the existing React build. Test launch, bridge startup, React loading, video processing, and output-folder opening.
+
+Tradeoffs:
+
+- fastest way to discover real packaging problems
+- keeps the current architecture visible
+- may produce a developer-oriented package first
+- may require follow-up work for bundled Python and FFmpeg
+
+### Option B: Packaging requirements audit first
+
+Document and inspect Python runtime, pywebview, React assets, FFmpeg, FFprobe, icons, output paths, permissions, and clean-machine behavior before creating a package.
+
+Tradeoffs:
+
+- gives a clearer distribution design before implementation
+- reduces the chance of choosing a packaging tool prematurely
+- takes longer before we have a launchable package
+- may identify issues that are easier to learn from a real spike
+
+Working recommendation: use Option A first, then use Option B to turn the successful spike into a repeatable distributable build. This preserves the reuse-first approach and gives us evidence before making a larger packaging decision.
+
 ## Gate 1 Working Method
 
 Gate 1 will be completed in small documented passes:
