@@ -337,7 +337,9 @@ The existing `.github/workflows/check.yml` is only a code checker. It does not b
 
 Decision: first create and scrutinize the local packaging script. Consider GitHub Actions packaging only afterward, as an optional launcher for operating systems that are not available locally.
 
-## Next Decision Gate: Local Packaging Tool
+## Deferred Decision Gate: Local Packaging Tool
+
+Packaging is not currently required. This section is retained only as a documented future reference if the project later needs a double-clickable installer.
 
 The local packaging script needs a tool that turns the existing Python desktop shell into a distributable application. The React build, Flask bridge, and FFmpeg pipeline should remain reused rather than rewritten.
 
@@ -382,7 +384,20 @@ Tradeoffs:
 1. Readable local prototype: create the smallest PyInstaller script, inspect every step, build a macOS app, and verify the existing desktop workflow. This gives concrete evidence quickly.
 2. Packaging design review first: compare PyInstaller and Briefcase against Python runtime, React assets, FFmpeg, icons, and future Windows/Linux needs before installing either tool. This reduces early experimentation but delays the first package.
 
-Working recommendation: Option A with the readable local prototype. This reuses the current Python entry point and keeps the first packaging change small. No tool should be installed or packaging code added until this decision is approved.
+Future-only recommendation: if an installer is later required, begin with Option A and a readable local prototype. No packaging tool should be installed and no packaging code should be added while terminal-based use remains sufficient.
+
+## Approved Decision: No Installer for Current Use
+
+The current product does not need macOS, Windows, or Linux installers. Users may run the documented development desktop command from a terminal, and the repository's checker will validate future changes.
+
+This means:
+
+- do not add PyInstaller or Briefcase now
+- do not create installer scripts now
+- do not create or commit generated application bundles
+- keep the existing pywebview shell and React UI
+- keep the README run instructions clear
+- revisit packaging only if the distribution requirement changes
 
 ## Gate 1 Working Method
 
