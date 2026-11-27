@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { cancelJob, getDownloadUrl, getHealth, openOutputFolder, sendVideo } from './api'
 import { Logo, ProcessPanel, Settings, VideoStage, WorkflowSteps } from './components'
 import { describeProcessingError, readBrowserMetadata } from './features/video-processing/media'
+import { getJobOutcome } from './features/video-processing/jobOutcome'
 import { useJobPolling } from './features/video-processing/useJobPolling'
 import './styles.css'
 import './centered.css'
@@ -28,19 +29,12 @@ function App() {
     onUpdate: (job) => {
       setProgress(Number(job.progress || 0))
       setProcessingMessage(job.message || 'Processing your video…')
-      if (job.state === 'completed') {
-        setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('completed')
-      } else if (job.state === 'timing_warning') {
-        setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('timing-warning')
-      } else if (job.state === 'needs_confirmation') {
-        setJobId(null); setResult(job.result); setPhase('no-silence')
-      } else if (job.state === 'settings_warning') {
-        setJobId(null); setResult(job.result); setPhase('over-cut')
-      } else if (job.state === 'cancelled') {
-        setJobId(null); setPhase('ready')
-      } else if (job.state === 'failed') {
-        setJobId(null); setError(job.error || 'Processing failed.'); setPhase('failed')
-      }
+      const outcome = getJobOutcome(job)
+      if (!outcome) return
+      setJobId(null)
+      if (outcome.result !== undefined) setResult(outcome.result)
+      if (outcome.error) setError(outcome.error)
+      setPhase(outcome.phase)
     },
     onError: (nextError) => {
       setJobId(null); setError(describeProcessingError(nextError, publicMode)); setPhase('failed')
