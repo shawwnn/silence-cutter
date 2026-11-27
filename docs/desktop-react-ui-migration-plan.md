@@ -291,6 +291,35 @@ Option 1 was selected: push the committed source and documentation to GitHub so 
 
 This does not publish an installer. It publishes only the source code, documentation, desktop prototype, and automated checker. Packaging remains deferred.
 
+## On-Demand Packaging Policy
+
+The repository will not store generated desktop installers or bundled application files. It will store only the source code, packaging scripts, build instructions, and optional workflow configuration needed to create them.
+
+When a macOS, Windows, or Linux build is needed, a user or maintainer should be able to run one documented command, wait for the build to finish, and see the exact output location printed at the end.
+
+The intended experience is:
+
+```text
+Run packaging command
+    ↓
+Build the existing React frontend
+    ↓
+Bundle the existing Python desktop shell and runtime requirements
+    ↓
+Validate the output
+    ↓
+Print the installer/application location
+```
+
+Generated output should go to an ignored local directory such as `release/` or `dist-desktop/`. It should not be committed to GitHub.
+
+### On-demand packaging scrutiny options
+
+1. Local packaging scripts: a maintainer runs the command on the target operating system. This is simple and transparent, but Windows and Linux require access to those operating systems.
+2. On-demand GitHub Actions builds: a maintainer starts a workflow for a selected operating system, then downloads the generated artifact. This avoids needing local Windows/Linux machines, but requires workflow setup and temporary GitHub artifact storage.
+
+Working recommendation: use local scripts as the readable source of truth, then add on-demand GitHub Actions builds for operating systems that are not locally available. Neither approach commits generated installers to the repository.
+
 ## Gate 1 Working Method
 
 Gate 1 will be completed in small documented passes:
