@@ -19,13 +19,13 @@ MIN_RETAINED_DURATION_SECONDS = 0.5
 # main.py
 
 
-def run_pipeline(video_path, output_path=None,
-                 progress_callback=None,
-                 status_callback=None,
-                 silence_duration=1.0,
-                 noise_db=-38.0,
-                 temp_dir="temp_segments",
-                 return_summary=False):
+def process_video(video_path, output_path=None,
+                  progress_callback=None,
+                  status_callback=None,
+                  silence_duration=1.0,
+                  noise_db=-38.0,
+                  temp_dir="temp_segments",
+                  return_summary=False):
     def update_progress_and_status_backend(status=None, progress=None):
         if progress_callback and progress is not None:
             progress_callback(progress)
@@ -139,6 +139,11 @@ def run_pipeline(video_path, output_path=None,
         }
 
     return output_path
+
+
+def run_pipeline(*args, **kwargs):
+    """Backward-compatible name for desktop and bridge callers."""
+    return process_video(*args, **kwargs)
 
 
 if __name__ == "__main__":
