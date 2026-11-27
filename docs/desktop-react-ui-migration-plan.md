@@ -285,6 +285,12 @@ The local scrutiny option is complete and passed:
 
 Decision: do not begin packaging yet. Continue treating the pywebview desktop shell as source code plus a documented development workflow. A packaging phase will begin only when an installable macOS, Windows, or Linux application is actually required.
 
+## Remote Verification Decision
+
+Option 1 was selected: push the committed source and documentation to GitHub so the new GitHub Actions checker can run remotely.
+
+This does not publish an installer. It publishes only the source code, documentation, desktop prototype, and automated checker. Packaging remains deferred.
+
 ## Gate 1 Working Method
 
 Gate 1 will be completed in small documented passes:
