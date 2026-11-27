@@ -118,17 +118,34 @@ Uses FFmpeg silence detection filters:
 
 ```text
 app/
-├── bridge/server.py          # Local Flask API
-├── main.py                   # Processing pipeline
-├── filter_graph_exporter.py  # Accurate FFmpeg export
+├── main.py                   # Shared process_video() application service
+├── silence_detector.py       # Detect silent sections with FFmpeg
 ├── silence_parser.py         # Parse FFmpeg silence logs
 ├── cut_builder.py            # Build retained intervals
-└── pipeline/                 # Output validation and cleanup
-src/                           # React/Vite interface
+├── filter_graph_exporter.py  # Accurate FFmpeg export
+├── pipeline/                 # Output validation and cleanup
+├── gui/                      # Desktop GUI adapter
+└── bridge/                   # Flask adapter and job management
+    ├── server.py             # Routes and JobManager
+    ├── worker.py             # Background processing worker
+    ├── media.py              # FFprobe metadata
+    ├── validation.py         # Request and demo-limit validation
+    └── job_state.py          # Public job response formatting
+src/
+├── main.jsx                  # React application composition
+├── api.js                    # Centralized bridge API calls
+└── features/video-processing/
+    ├── media.js              # Browser metadata and error helpers
+    ├── useJobPolling.js      # Job status polling
+    └── jobOutcome.js         # Job-state to UI-phase mapping
 assets/                       # Application assets and generated outputs
 tests/                        # Automated processing tests
 entry.py                      # Packaged application entry point
 ```
+
+The desktop GUI and React/Flask bridge both use the shared Python `process_video()` service. The bridge and UI translate their own interfaces into that service; video-processing rules are not duplicated between them.
+
+See [docs/architecture/mvp-refactor-plan.md](docs/architecture/mvp-refactor-plan.md) for the refactoring decisions and phase checkpoints.
 
 
 ---
