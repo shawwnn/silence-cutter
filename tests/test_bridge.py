@@ -218,7 +218,7 @@ def test_worker_reports_over_cut_without_a_downloadable_output(monkeypatch):
         def close(self): pass
         def join_thread(self): pass
 
-    monkeypatch.setattr(server, "run_pipeline", lambda *args, **kwargs: (_ for _ in ()).throw(
+    monkeypatch.setattr(server, "process_video", lambda *args, **kwargs: (_ for _ in ()).throw(
         InsufficientRetainedContent(254.0, 0.25, 253.75)
     ))
     events = Events()

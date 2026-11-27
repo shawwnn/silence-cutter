@@ -17,7 +17,7 @@ from typing import Any
 
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
-from app.main import run_pipeline
+from app.main import process_video
 from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 from app.pipeline.no_silence_detected import NoSilenceDetected
 from app.output_naming import build_output_name
@@ -113,7 +113,7 @@ def _worker(input_path: str, output_path: str, duration: float, noise_db: float,
     def progress(value: float): events.put({"type": "progress", "progress": value})
     def status(message: str): events.put({"type": "status", "message": message})
     try:
-        result = run_pipeline(input_path, output_path=output_path, progress_callback=progress,
+        result = process_video(input_path, output_path=output_path, progress_callback=progress,
                               status_callback=status, silence_duration=duration, noise_db=noise_db,
                               temp_dir=temp_dir, return_summary=True)
         verified = result["duration_verified"]
