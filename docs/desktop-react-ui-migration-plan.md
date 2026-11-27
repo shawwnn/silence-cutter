@@ -320,6 +320,23 @@ Generated output should go to an ignored local directory such as `release/` or `
 
 Working recommendation: use local scripts as the readable source of truth, then add on-demand GitHub Actions builds for operating systems that are not locally available. Neither approach commits generated installers to the repository.
 
+### Single source of truth clarification
+
+The packaging logic must live in one readable local script. GitHub Actions must not contain a second copy of that logic.
+
+GitHub Actions is a hosted computer that can run repository commands automatically. In this project, a future packaging workflow would only:
+
+1. check out the repository
+2. install the required tools
+3. call the same packaging script a person can run locally
+4. upload the temporary output for download
+
+The workflow would not define a different build process. Its YAML file would be a thin launcher, while the packaging script would remain the source of truth and the primary object of review.
+
+The existing `.github/workflows/check.yml` is only a code checker. It does not build installers. Packaging automation is deferred until the local packaging script exists, is understandable, and has passed a local review.
+
+Decision: first create and scrutinize the local packaging script. Consider GitHub Actions packaging only afterward, as an optional launcher for operating systems that are not available locally.
+
 ## Gate 1 Working Method
 
 Gate 1 will be completed in small documented passes:
