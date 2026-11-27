@@ -9,7 +9,7 @@ import traceback
 
 from tkinter import filedialog
 from tkinter import messagebox
-from app.main import run_pipeline
+from app.main import process_video
 
 # app/gui/gui.py
 
@@ -182,7 +182,7 @@ def start_cutting():
         global output_file_path
 
         try:
-            output_file_path = run_pipeline(
+            output_file_path = process_video(
                 selected_file,
                 progress_callback=update_progress_gui,
                 status_callback=update_status_gui,
