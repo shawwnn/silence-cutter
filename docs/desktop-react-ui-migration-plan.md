@@ -251,6 +251,27 @@ Tradeoffs:
 
 Working recommendation: use Option A first, then use Option B to turn the successful spike into a repeatable distributable build. This preserves the reuse-first approach and gives us evidence before making a larger packaging decision.
 
+## Approved Interim Decision: Defer Installers, Add Checks
+
+We will not create macOS, Windows, or Linux installers yet. The current objective is to keep the source code reusable and continuously checked while packaging remains a future phase.
+
+The interim monitoring approach is:
+
+- document the current development-only desktop workflow in `README.md`
+- document when a packaged installer becomes necessary
+- add one GitHub Actions workflow that reuses the existing React build, Python syntax check, and automated tests
+- keep generated installers and build artifacts out of the repository
+- create a Git checkpoint after the checker and documentation are verified
+
+This is intentionally a checker, not a packaging system. It detects regressions in new code without committing us to platform-specific installers.
+
+Scrutiny options for this interim phase:
+
+1. Automated checker: every push and pull request runs the existing build and tests. This is repeatable and catches regressions early, but it cannot fully prove native window behavior on every operating system.
+2. Manual desktop smoke test: periodically launch the documented desktop command and process `tests/sample.mov`. This verifies the real window and bridge behavior, but it is slower and depends on an available desktop environment.
+
+Working recommendation: use both. Automation is the default gate; the manual smoke test is required when desktop-shell or packaging-related code changes.
+
 ## Gate 1 Working Method
 
 Gate 1 will be completed in small documented passes:

@@ -94,6 +94,23 @@ ffprobe -version
 
 See [docs/dependencies.md](docs/dependencies.md) for the complete dependency notes. FFmpeg and FFprobe are intentionally excluded from `requirements.txt` because they are not Python packages.
 
+## 🖥️ Desktop Development and Packaging Status
+
+The React interface can run inside a local pywebview desktop window while reusing the existing Flask bridge and FFmpeg pipeline.
+
+Start the development desktop window with two commands from the repository root:
+
+```bash
+npm run dev
+python3 -m app.desktop
+```
+
+This is the development desktop workflow. It is not an installer. New React changes appear through Vite hot reload while developing.
+
+An installable macOS, Windows, or Linux application is only needed when distributing Silence Cutter to users who should launch it by double-clicking. Until that phase is approved, commit the source code and documentation to GitHub, but do not commit generated installers or build artifacts.
+
+The current repository has an automated checker for new changes. It runs the existing React build, Python syntax validation, and automated tests on pushes and pull requests. Desktop-window smoke testing remains a manual check when desktop-shell code changes.
+
 ---
 
 ## 🎥 Processing Strategy
