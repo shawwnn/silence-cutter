@@ -1,8 +1,9 @@
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { cancelJob, getDownloadUrl, getHealth, getJob, openOutputFolder, sendVideo } from './api'
+import { cancelJob, getDownloadUrl, getHealth, openOutputFolder, sendVideo } from './api'
 import { Logo, ProcessPanel, Settings, VideoStage, WorkflowSteps } from './components'
 import { describeProcessingError, readBrowserMetadata } from './features/video-processing/media'
+import { useJobPolling } from './features/video-processing/useJobPolling'
 import './styles.css'
 import './centered.css'
 
@@ -23,32 +24,28 @@ function App() {
     getHealth().then((health) => setPublicMode(Boolean(health.public_mode))).catch(() => setPublicMode(false))
   }, [])
 
-  useEffect(() => {
-    if (!jobId) return undefined
-    const timer = setInterval(async () => {
-      try {
-        const job = await getJob(jobId)
-        setProgress(Number(job.progress || 0))
-        setProcessingMessage(job.message || 'Processing your video…')
-        if (job.state === 'completed') {
-          setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('completed')
-        } else if (job.state === 'timing_warning') {
-          setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('timing-warning')
-        } else if (job.state === 'needs_confirmation') {
-          setJobId(null); setResult(job.result); setPhase('no-silence')
-        } else if (job.state === 'settings_warning') {
-          setJobId(null); setResult(job.result); setPhase('over-cut')
-        } else if (job.state === 'cancelled') {
-          setJobId(null); setPhase('ready')
-        } else if (job.state === 'failed') {
-          setJobId(null); setError(job.error || 'Processing failed.'); setPhase('failed')
-        }
-      } catch (nextError) {
-        setJobId(null); setError(describeProcessingError(nextError, publicMode)); setPhase('failed')
+  useJobPolling(jobId, {
+    onUpdate: (job) => {
+      setProgress(Number(job.progress || 0))
+      setProcessingMessage(job.message || 'Processing your video…')
+      if (job.state === 'completed') {
+        setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('completed')
+      } else if (job.state === 'timing_warning') {
+        setJobId(null); setResult({ ...job.result, job_id: job.job_id }); setPhase('timing-warning')
+      } else if (job.state === 'needs_confirmation') {
+        setJobId(null); setResult(job.result); setPhase('no-silence')
+      } else if (job.state === 'settings_warning') {
+        setJobId(null); setResult(job.result); setPhase('over-cut')
+      } else if (job.state === 'cancelled') {
+        setJobId(null); setPhase('ready')
+      } else if (job.state === 'failed') {
+        setJobId(null); setError(job.error || 'Processing failed.'); setPhase('failed')
       }
-    }, 500)
-    return () => clearInterval(timer)
-  }, [jobId, publicMode])
+    },
+    onError: (nextError) => {
+      setJobId(null); setError(describeProcessingError(nextError, publicMode)); setPhase('failed')
+    },
+  })
 
   async function chooseFile(nextFile) {
     if (!nextFile || phase === 'processing') return
