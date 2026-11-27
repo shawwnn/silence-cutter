@@ -337,6 +337,53 @@ The existing `.github/workflows/check.yml` is only a code checker. It does not b
 
 Decision: first create and scrutinize the local packaging script. Consider GitHub Actions packaging only afterward, as an optional launcher for operating systems that are not available locally.
 
+## Next Decision Gate: Local Packaging Tool
+
+The local packaging script needs a tool that turns the existing Python desktop shell into a distributable application. The React build, Flask bridge, and FFmpeg pipeline should remain reused rather than rewritten.
+
+### Option A: PyInstaller
+
+The packaging script would run the existing Python desktop entry point through PyInstaller, include the required Python modules, and place the generated application in an ignored output directory.
+
+Advantages:
+
+- familiar Python packaging approach
+- fits the existing `app/desktop.py` entry point
+- can produce macOS, Windows, and Linux builds when run on each target OS
+- keeps the packaging logic in one readable Python or shell script
+- does not require changing the React UI or processing pipeline
+
+Tradeoffs:
+
+- each operating system must build its own native output
+- FFmpeg and FFprobe still need an explicit bundling or installation decision
+- macOS signing and Windows security warnings are later distribution concerns
+- the first package may require a small amount of hidden-import configuration
+
+### Option B: Briefcase
+
+The packaging script would use Briefcase to create a more native application structure and platform-specific packaging workflow.
+
+Advantages:
+
+- stronger native-application packaging conventions
+- can produce platform-oriented application bundles and installers
+- may provide a clearer long-term distribution path
+
+Tradeoffs:
+
+- more project configuration and concepts to learn
+- likely more changes around the current Python entry point and assets
+- less minimal for the current prototype
+- still requires separate builds and FFmpeg handling per operating system
+
+### Scrutiny options
+
+1. Readable local prototype: create the smallest PyInstaller script, inspect every step, build a macOS app, and verify the existing desktop workflow. This gives concrete evidence quickly.
+2. Packaging design review first: compare PyInstaller and Briefcase against Python runtime, React assets, FFmpeg, icons, and future Windows/Linux needs before installing either tool. This reduces early experimentation but delays the first package.
+
+Working recommendation: Option A with the readable local prototype. This reuses the current Python entry point and keeps the first packaging change small. No tool should be installed or packaging code added until this decision is approved.
+
 ## Gate 1 Working Method
 
 Gate 1 will be completed in small documented passes:
