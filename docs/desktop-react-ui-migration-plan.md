@@ -393,11 +393,15 @@ The current product does not need macOS, Windows, or Linux installers. Users may
 This means:
 
 - do not add PyInstaller or Briefcase now
-- do not create installer scripts now
 - do not create or commit generated application bundles
 - keep the existing pywebview shell and React UI
 - keep the README run instructions clear
-- revisit packaging only if the distribution requirement changes
+- keep the documented on-demand packaging plan available
+- when distribution is needed, add one readable packaging script as the source of truth
+- run that script only when an installer is requested, and print the generated output location
+- revisit the packaging tool choice only when the distribution requirement changes
+
+The distinction is important: installer files are not stored in the repository, but a future packaging script and its documentation may be stored there so a maintainer can generate an installer on demand.
 
 ## Gate 1 Working Method
 

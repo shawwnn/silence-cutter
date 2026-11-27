@@ -107,7 +107,7 @@ python3 -m app.desktop
 
 This is the development desktop workflow. It is not an installer. New React changes appear through Vite hot reload while developing.
 
-An installable macOS, Windows, or Linux application is only needed when distributing Silence Cutter to users who should launch it by double-clicking. Until that phase is approved, commit the source code and documentation to GitHub, but do not commit generated installers or build artifacts.
+An installable macOS, Windows, or Linux application is only needed when distributing Silence Cutter to users who should launch it by double-clicking. Until that phase is approved, commit the source code and documentation to GitHub, but do not commit generated installers or build artifacts. When that phase is needed, the repository should contain one documented packaging script that creates the installer on demand and prints its output location.
 
 The current repository has an automated checker for new changes. It runs the existing React build, Python syntax validation, and automated tests on pushes and pull requests. Desktop-window smoke testing remains a manual check when desktop-shell code changes.
 
