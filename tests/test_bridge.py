@@ -2,6 +2,7 @@ import io
 from pathlib import Path
 
 from app.bridge import server
+from app.bridge import worker
 from app.bridge.server import JobManager, create_app
 from app.pipeline.insufficient_retained_content import InsufficientRetainedContent
 from app.output_naming import build_output_name
@@ -218,7 +219,7 @@ def test_worker_reports_over_cut_without_a_downloadable_output(monkeypatch):
         def close(self): pass
         def join_thread(self): pass
 
-    monkeypatch.setattr(server, "process_video", lambda *args, **kwargs: (_ for _ in ()).throw(
+    monkeypatch.setattr(worker, "process_video", lambda *args, **kwargs: (_ for _ in ()).throw(
         InsufficientRetainedContent(254.0, 0.25, 253.75)
     ))
     events = Events()
